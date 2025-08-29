@@ -23,6 +23,9 @@ export const BOOK_CATEGORIES = [
   'Poetry'
 ] as const;
 
+// Alias for backward compatibility
+export const CATEGORIES = BOOK_CATEGORIES;
+
 export const BOOK_FORMATS = [
   'Paperback',
   'Hardcover',
