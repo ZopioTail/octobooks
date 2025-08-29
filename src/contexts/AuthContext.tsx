@@ -47,9 +47,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!auth) {
+      // Firebase not configured, set to unauthenticated state
+      setCurrentUser(null);
+      setUserProfile(null);
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
-      
+
       if (user) {
         try {
           const profile = await getUserProfile(user.uid);
@@ -61,7 +69,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } else {
         setUserProfile(null);
       }
-      
+
       setLoading(false);
     });
 
