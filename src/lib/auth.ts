@@ -17,7 +17,7 @@ import { User } from '@/types';
 
 // Create user profile in Firestore
 export const createUserProfile = async (user: FirebaseUser, additionalData: Partial<User> = {}) => {
-  if (!user) return;
+  if (!user || !db) return;
 
   const userRef = doc(db, 'users', user.uid);
   const userSnap = await getDoc(userRef);
@@ -50,10 +50,15 @@ export const createUserProfile = async (user: FirebaseUser, additionalData: Part
 
 // Get user profile from Firestore
 export const getUserProfile = async (userId: string): Promise<User | null> => {
+  if (!db) {
+    console.warn('Firebase not configured');
+    return null;
+  }
+
   try {
     const userRef = doc(db, 'users', userId);
     const userSnap = await getDoc(userRef);
-    
+
     if (userSnap.exists()) {
       return userSnap.data() as User;
     }

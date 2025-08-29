@@ -36,6 +36,11 @@ export interface BookQueryOptions {
 
 // Get books with filtering, sorting, and pagination
 export const getBooks = async (options: BookQueryOptions = {}) => {
+  if (!db) {
+    console.warn('Firebase not configured, returning empty results');
+    return { books: [], hasMore: false };
+  }
+
   try {
     const {
       filters = {},
@@ -118,6 +123,11 @@ export const getBooks = async (options: BookQueryOptions = {}) => {
 
 // Get a single book by ID
 export const getBookById = async (bookId: string): Promise<Book | null> => {
+  if (!db) {
+    console.warn('Firebase not configured');
+    return null;
+  }
+
   try {
     const docRef = doc(db, 'books', bookId);
     const docSnap = await getDoc(docRef);
