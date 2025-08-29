@@ -1,21 +1,38 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Search, Filter, Star, ShoppingCart, Heart } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Search, Filter, Star, ShoppingCart, Heart, SortAsc, Grid, List, X, ChevronDown } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { Card, CardContent } from '@/components/ui/Card';
+import Select from '@/components/ui/Select';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { formatPrice } from '@/lib/utils';
+import { BOOK_CATEGORIES, LANGUAGES } from '@/lib/constants';
 
 const SearchPage = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [query, setQuery] = useState(searchParams.get('q') || '');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Advanced filters
+  const [filters, setFilters] = useState({
+    category: searchParams.get('category') || '',
+    language: searchParams.get('language') || '',
+    minPrice: searchParams.get('minPrice') || '',
+    maxPrice: searchParams.get('maxPrice') || '',
+    rating: searchParams.get('rating') || '',
+    format: searchParams.get('format') || '',
+    publisher: searchParams.get('publisher') || '',
+    sortBy: searchParams.get('sortBy') || 'relevance'
+  });
 
   // Sample search results - this would come from Firebase search in production
   const sampleResults = [
@@ -48,24 +65,103 @@ const SearchPage = () => {
   ];
 
   useEffect(() => {
+    setLoading(true);
+    // Simulate search API call
+    setTimeout(() => {
+      const filteredResults = applyFilters(sampleResults);
+      setResults(filteredResults);
+      setLoading(false);
+    }, 1000);
+  }, [query, filters]);
+
+  // Update URL with current filters
+  const updateURL = () => {
+    const params = new URLSearchParams();
+    if (query) params.set('q', query);
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) params.set(key, value);
+    });
+    router.push(`/search?${params.toString()}`);
+  };
+
+  // Handle filter changes
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setFilters({
+      category: '',
+      language: '',
+      minPrice: '',
+      maxPrice: '',
+      rating: '',
+      format: '',
+      publisher: '',
+      sortBy: 'relevance'
+    });
+  };
+
+  // Apply filters to results
+  const applyFilters = (books: any[]) => {
+    let filtered = books;
+
+    // Text search
     if (query) {
-      setLoading(true);
-      // Simulate search API call
-      setTimeout(() => {
-        setResults(sampleResults.filter(book => 
-          book.title.toLowerCase().includes(query.toLowerCase()) ||
-          book.author.toLowerCase().includes(query.toLowerCase()) ||
-          book.category.toLowerCase().includes(query.toLowerCase())
-        ));
-        setLoading(false);
-      }, 1000);
+      filtered = filtered.filter(book =>
+        book.title.toLowerCase().includes(query.toLowerCase()) ||
+        book.author.toLowerCase().includes(query.toLowerCase()) ||
+        book.category.toLowerCase().includes(query.toLowerCase()) ||
+        book.publisher.toLowerCase().includes(query.toLowerCase())
+      );
     }
-  }, [query]);
+
+    // Category filter
+    if (filters.category) {
+      filtered = filtered.filter(book => book.category === filters.category);
+    }
+
+    // Price range filter
+    if (filters.minPrice) {
+      filtered = filtered.filter(book => book.finalPrice >= parseInt(filters.minPrice));
+    }
+    if (filters.maxPrice) {
+      filtered = filtered.filter(book => book.finalPrice <= parseInt(filters.maxPrice));
+    }
+
+    // Rating filter
+    if (filters.rating) {
+      filtered = filtered.filter(book => book.rating >= parseFloat(filters.rating));
+    }
+
+    // Sort results
+    switch (filters.sortBy) {
+      case 'price-low':
+        filtered.sort((a, b) => a.finalPrice - b.finalPrice);
+        break;
+      case 'price-high':
+        filtered.sort((a, b) => b.finalPrice - a.finalPrice);
+        break;
+      case 'rating':
+        filtered.sort((a, b) => b.rating - a.rating);
+        break;
+      case 'newest':
+        filtered.sort((a, b) => new Date(b.publishedDate || '').getTime() - new Date(a.publishedDate || '').getTime());
+        break;
+      case 'popularity':
+        filtered.sort((a, b) => b.reviewsCount - a.reviewsCount);
+        break;
+      default: // relevance
+        break;
+    }
+
+    return filtered;
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Update URL and trigger search
-    window.history.pushState({}, '', `/search?q=${encodeURIComponent(query)}`);
+    updateURL();
   };
 
   return (
@@ -78,36 +174,210 @@ const SearchPage = () => {
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
               Search Results
             </h1>
-            
-            {/* Search Form */}
-            <form onSubmit={handleSearch} className="max-w-2xl">
-              <div className="flex space-x-4">
-                <div className="flex-1">
+
+            {/* Enhanced Search Form */}
+            <form onSubmit={handleSearch} className="max-w-4xl">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                <div className="md:col-span-6">
                   <Input
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search books, authors, publishers..."
+                    placeholder="Search books, authors, publishers, ISBN..."
                     leftIcon={<Search className="h-5 w-5" />}
+                    className="h-12"
                   />
                 </div>
-                <Button type="submit" variant="primary" loading={loading}>
-                  Search
-                </Button>
+                <div className="md:col-span-2">
+                  <Select
+                    value={filters.category}
+                    onChange={(e) => handleFilterChange('category', e.target.value)}
+                    options={[
+                      { value: '', label: 'All Categories' },
+                      ...BOOK_CATEGORIES.map(cat => ({ value: cat, label: cat }))
+                    ]}
+                    className="h-12"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <Select
+                    value={filters.sortBy}
+                    onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                    options={[
+                      { value: 'relevance', label: 'Relevance' },
+                      { value: 'price-low', label: 'Price: Low to High' },
+                      { value: 'price-high', label: 'Price: High to Low' },
+                      { value: 'rating', label: 'Highest Rated' },
+                      { value: 'newest', label: 'Newest First' },
+                      { value: 'popularity', label: 'Most Popular' }
+                    ]}
+                    className="h-12"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <Button type="submit" variant="primary" loading={loading} className="w-full h-12">
+                    Search
+                  </Button>
+                </div>
               </div>
             </form>
 
-            {query && (
-              <div className="mt-4 flex items-center space-x-4">
-                <span className="text-gray-600 dark:text-gray-400">
-                  Showing results for: <strong>"{query}"</strong>
-                </span>
+            {/* Search Info and Controls */}
+            <div className="mt-6 flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+              <div className="flex items-center space-x-4">
+                {query && (
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Showing results for: <strong>"{query}"</strong>
+                  </span>
+                )}
                 <Badge variant="info">
                   {results.length} results found
                 </Badge>
               </div>
-            )}
+
+              <div className="flex items-center space-x-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <Filter className="h-4 w-4 mr-2" />
+                  Advanced Filters
+                  <ChevronDown className={`h-4 w-4 ml-2 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+                </Button>
+
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant={viewMode === 'grid' ? 'primary' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('grid')}
+                  >
+                    <Grid className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'list' ? 'primary' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('list')}
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
+
+          {/* Advanced Filters Panel */}
+          {showFilters && (
+            <Card className="mb-8">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Advanced Filters</h3>
+                  <Button variant="outline" size="sm" onClick={clearFilters}>
+                    <X className="h-4 w-4 mr-2" />
+                    Clear All
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {/* Price Range */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Price Range
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        type="number"
+                        placeholder="Min ₹"
+                        value={filters.minPrice}
+                        onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                      />
+                      <Input
+                        type="number"
+                        placeholder="Max ₹"
+                        value={filters.maxPrice}
+                        onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Rating Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Minimum Rating
+                    </label>
+                    <Select
+                      value={filters.rating}
+                      onChange={(e) => handleFilterChange('rating', e.target.value)}
+                      options={[
+                        { value: '', label: 'Any Rating' },
+                        { value: '4.5', label: '4.5+ Stars' },
+                        { value: '4.0', label: '4.0+ Stars' },
+                        { value: '3.5', label: '3.5+ Stars' },
+                        { value: '3.0', label: '3.0+ Stars' }
+                      ]}
+                    />
+                  </div>
+
+                  {/* Language Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Language
+                    </label>
+                    <Select
+                      value={filters.language}
+                      onChange={(e) => handleFilterChange('language', e.target.value)}
+                      options={[
+                        { value: '', label: 'All Languages' },
+                        ...LANGUAGES.map(lang => ({ value: lang, label: lang }))
+                      ]}
+                    />
+                  </div>
+
+                  {/* Format Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Format
+                    </label>
+                    <Select
+                      value={filters.format}
+                      onChange={(e) => handleFilterChange('format', e.target.value)}
+                      options={[
+                        { value: '', label: 'All Formats' },
+                        { value: 'Paperback', label: 'Paperback' },
+                        { value: 'Hardcover', label: 'Hardcover' },
+                        { value: 'E-book', label: 'E-book' },
+                        { value: 'Audiobook', label: 'Audiobook' }
+                      ]}
+                    />
+                  </div>
+                </div>
+
+                {/* Active Filters */}
+                {Object.entries(filters).some(([key, value]) => value && key !== 'sortBy') && (
+                  <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Active Filters:</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {Object.entries(filters).map(([key, value]) => {
+                        if (!value || key === 'sortBy') return null;
+                        return (
+                          <Badge key={key} variant="default" className="flex items-center space-x-2">
+                            <span>{key}: {value}</span>
+                            <button
+                              onClick={() => handleFilterChange(key, '')}
+                              className="ml-1 hover:text-red-500"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Search Results */}
           {loading ? (

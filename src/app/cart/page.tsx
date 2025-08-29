@@ -1,15 +1,20 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, Heart, Gift, Truck, Shield, Star } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import Badge from '@/components/ui/Badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { formatPrice } from '@/lib/utils';
 
 const CartPage = () => {
+  const [promoCode, setPromoCode] = useState('');
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [savedForLater, setSavedForLater] = useState<any[]>([]);
+
   // Sample cart data - this would come from CartContext in production
   const cartItems = [
     {
@@ -35,7 +40,28 @@ const CartPage = () => {
   const subtotal = cartItems.reduce((sum, item) => sum + (item.finalPrice * item.quantity), 0);
   const shipping = subtotal >= 499 ? 0 : 50;
   const tax = Math.round(subtotal * 0.18);
-  const total = subtotal + shipping + tax;
+  const discount = promoDiscount;
+  const total = subtotal + shipping + tax - discount;
+
+  const applyPromoCode = () => {
+    // Simulate promo code validation
+    if (promoCode.toLowerCase() === 'save10') {
+      setPromoDiscount(Math.round(subtotal * 0.1));
+    } else if (promoCode.toLowerCase() === 'welcome20') {
+      setPromoDiscount(Math.round(subtotal * 0.2));
+    } else {
+      setPromoDiscount(0);
+      alert('Invalid promo code');
+    }
+  };
+
+  const saveForLater = (bookId: string) => {
+    const item = cartItems.find(item => item.bookId === bookId);
+    if (item) {
+      setSavedForLater(prev => [...prev, item]);
+      removeItem(bookId);
+    }
+  };
 
   const updateQuantity = (bookId: string, newQuantity: number) => {
     // This would update the cart context
@@ -146,12 +172,22 @@ const CartPage = () => {
                           </button>
                         </div>
                         
-                        <button
-                          onClick={() => removeItem(item.bookId)}
-                          className="p-2 text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => saveForLater(item.bookId)}
+                            className="p-2 text-blue-600 hover:text-blue-700"
+                            title="Save for Later"
+                          >
+                            <Heart className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => removeItem(item.bookId)}
+                            className="p-2 text-red-600 hover:text-red-700"
+                            title="Remove from Cart"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -183,6 +219,34 @@ const CartPage = () => {
                       <span className="text-gray-600 dark:text-gray-400">Tax (18%)</span>
                       <span className="font-medium">{formatPrice(tax)}</span>
                     </div>
+                    {discount > 0 && (
+                      <div className="flex justify-between text-green-600">
+                        <span className="text-gray-600 dark:text-gray-400">Discount</span>
+                        <span className="font-medium">-{formatPrice(discount)}</span>
+                      </div>
+                    )}
+
+                    {/* Promo Code Section */}
+                    <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+                      <div className="flex space-x-2 mb-3">
+                        <input
+                          type="text"
+                          placeholder="Enter promo code"
+                          value={promoCode}
+                          onChange={(e) => setPromoCode(e.target.value)}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                        />
+                        <Button variant="outline" size="sm" onClick={applyPromoCode}>
+                          Apply
+                        </Button>
+                      </div>
+                      {discount > 0 && (
+                        <div className="text-sm text-green-600">
+                          ✓ Promo code applied successfully!
+                        </div>
+                      )}
+                    </div>
+
                     <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
                       <div className="flex justify-between">
                         <span className="text-lg font-semibold text-gray-900 dark:text-white">Total</span>
@@ -190,6 +254,11 @@ const CartPage = () => {
                           {formatPrice(total)}
                         </span>
                       </div>
+                      {subtotal < 499 && (
+                        <p className="text-sm text-blue-600 mt-2">
+                          Add {formatPrice(499 - subtotal)} more for free shipping!
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -204,7 +273,8 @@ const CartPage = () => {
                   <div className="space-y-3 pt-4">
                     <Link href="/checkout">
                       <Button variant="primary" size="lg" className="w-full">
-                        Proceed to Checkout
+                        <Shield className="h-5 w-5 mr-2" />
+                        Secure Checkout
                       </Button>
                     </Link>
                     <Link href="/">

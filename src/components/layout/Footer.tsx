@@ -41,11 +41,14 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Company Info */}
           <div className="lg:col-span-2">
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">O</span>
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-xl">📚</span>
               </div>
-              <span className="text-xl font-bold">Octobooks</span>
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold">Octobooks</span>
+                <span className="text-sm text-gray-400">Your Digital Library</span>
+              </div>
             </div>
             <p className="text-gray-400 mb-6 max-w-md">
               Your trusted online bookstore offering the best collection of books from renowned authors and publishers. 

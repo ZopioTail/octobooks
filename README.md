@@ -5,15 +5,32 @@ A comprehensive, mobile-optimized online bookstore built with Next.js, Firebase,
 ## ✨ Features
 
 ### Customer Features
-- 🏠 **Modern Home Page** with hero banners, best sellers, new arrivals
-- 📖 **Book Catalog** with advanced search, filters, and sorting
-- 🛒 **Shopping Cart & Checkout** with Razorpay payment integration
-- 👤 **Customer Dashboard** with order history, wishlist, and profile management
-- 📱 **Mobile-First Design** with responsive UI and smooth animations
+- 🏠 **Enhanced Home Page** with hero banners, featured books, top authors, publisher brands
+- 🔍 **Advanced Search** with filters by price, rating, genre, language, and format
+- 📖 **Book Catalog** with grid/list views, sorting, and pagination
+- 🛒 **Smart Shopping Cart** with save for later, promo codes, and secure checkout
+- 👤 **Customer Dashboard** with reading goals, order tracking, and personalized recommendations
+- 📱 **Mobile-First Design** with responsive UI, dark mode, and smooth animations
+- ⭐ **Reviews & Ratings** with detailed feedback and helpful voting
+- 🎯 **Reading Goals** with progress tracking and achievement badges
+- 💝 **Wishlist Management** with easy organization and sharing
+- 📦 **Order Tracking** with real-time updates and delivery notifications
+
+### Author Features
+- ✍️ **Author Dashboard** with comprehensive analytics and sales tracking
+- 📚 **Book Management** with easy submission and editing tools
+- 💰 **Earnings Tracking** with detailed royalty reports and payment history
+- 👥 **Reader Engagement** through reviews, ratings, and feedback
+- 📈 **Performance Analytics** with sales trends and reader insights
+- 🎨 **Author Profile** with bio, social links, and book showcase
 
 ### Publisher Features
-- 📚 **Book Management** - Upload and manage book catalog
-- 📊 **Sales Analytics** - Track sales and distribution
+- 🏢 **Publisher Portal** with catalog and author relationship management
+- 📊 **Advanced Analytics** with sales performance and market insights
+- 📚 **Bulk Operations** for efficient large catalog management
+- 💼 **Revenue Tracking** with detailed financial reports and commissions
+- 👥 **Author Management** for onboarding and partnership management
+- 🎯 **Marketing Tools** with promotional campaigns and featured placements
 - 💰 **Royalty Reports** - Monthly/quarterly earnings reports
 - 💬 **Admin Communication** - Direct messaging with admin
 

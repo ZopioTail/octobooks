@@ -28,28 +28,34 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 dark:bg-gray-900/95 dark:border-gray-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">O</span>
+            <Link href="/" className="flex items-center space-x-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform">
+                <span className="text-white font-bold text-xl">📚</span>
               </div>
-              <span className="text-xl font-bold text-gray-900 dark:text-white">
-                Octobooks
-              </span>
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+                  Octobooks
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 -mt-1 hidden sm:block">
+                  Your Digital Library
+                </span>
+              </div>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
+          <nav className="hidden lg:flex items-center space-x-10">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 transition-colors"
+                className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 transition-colors font-medium text-lg relative group"
               >
                 {item.name}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all group-hover:w-full"></span>
               </Link>
             ))}
           </nav>
@@ -71,25 +77,25 @@ const Header = () => {
           </div>
 
           {/* Right side actions */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-6">
             {/* Mobile search button */}
-            <button className="lg:hidden p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-              <Search className="h-5 w-5" />
+            <button className="lg:hidden p-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all">
+              <Search className="h-6 w-6" />
             </button>
 
             {/* Wishlist */}
-            <Link href="/wishlist" className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 relative">
-              <Heart className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+            <Link href="/wishlist" className="p-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 relative hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all">
+              <Heart className="h-6 w-6" />
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center shadow-lg">
                 0
               </span>
             </Link>
 
             {/* Cart */}
-            <Link href="/cart" className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 relative">
-              <ShoppingCart className="h-5 w-5" />
+            <Link href="/cart" className="p-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 relative hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all">
+              <ShoppingCart className="h-6 w-6" />
               {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center shadow-lg animate-pulse">
                   {itemCount > 99 ? '99+' : itemCount}
                 </span>
               )}

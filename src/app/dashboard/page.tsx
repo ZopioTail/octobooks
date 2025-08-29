@@ -1,13 +1,18 @@
 'use client';
 
-import React from 'react';
-import { User, Package, Heart, CreditCard, Settings, LogOut } from 'lucide-react';
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { User, Package, Heart, CreditCard, Settings, LogOut, Bell, TrendingUp, BookOpen, Target, Award, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import Badge from '@/components/ui/Badge';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { formatPrice } from '@/lib/utils';
 
 const CustomerDashboard = () => {
+  const [showNotifications, setShowNotifications] = useState(false);
+
   // Sample user data - this would come from Firebase in production
   const user = {
     name: 'John Doe',
@@ -16,8 +21,38 @@ const CustomerDashboard = () => {
     walletBalance: 1250,
     rewardsPoints: 850,
     totalOrders: 12,
-    totalSpent: 15600
+    totalSpent: 15600,
+    readingGoal: 12,
+    booksRead: 8,
+    currentStreak: 5
   };
+
+  const notifications = [
+    {
+      id: 1,
+      type: 'order',
+      title: 'Order Delivered',
+      message: 'Your order #ORD001 has been delivered successfully',
+      time: '2 hours ago',
+      read: false
+    },
+    {
+      id: 2,
+      type: 'recommendation',
+      title: 'New Book Recommendation',
+      message: 'Based on your reading history, you might like "Think and Grow Rich"',
+      time: '1 day ago',
+      read: false
+    },
+    {
+      id: 3,
+      type: 'offer',
+      title: 'Special Discount',
+      message: '20% off on all fiction books this weekend!',
+      time: '2 days ago',
+      read: true
+    }
+  ];
 
   const recentOrders = [
     {
@@ -48,26 +83,41 @@ const CustomerDashboard = () => {
       title: 'Total Orders',
       value: user.totalOrders,
       icon: Package,
-      color: 'text-blue-600'
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+      change: '+2 this month'
     },
     {
       title: 'Total Spent',
-      value: `₹${user.totalSpent.toLocaleString()}`,
+      value: formatPrice(user.totalSpent),
       icon: CreditCard,
-      color: 'text-green-600'
+      color: 'text-green-600',
+      bgColor: 'bg-green-50 dark:bg-green-900/20',
+      change: '+₹1,200 this month'
     },
     {
-      title: 'Wallet Balance',
-      value: `₹${user.walletBalance}`,
-      icon: CreditCard,
-      color: 'text-purple-600'
+      title: 'Books Read',
+      value: `8/12`,
+      icon: BookOpen,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50 dark:bg-purple-900/20',
+      change: '67% of yearly goal'
     },
     {
-      title: 'Rewards Points',
-      value: user.rewardsPoints,
-      icon: Heart,
-      color: 'text-red-600'
+      title: 'Reading Streak',
+      value: `5 days`,
+      icon: Target,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50 dark:bg-orange-900/20',
+      change: 'Keep it up!'
     }
+  ];
+
+  const quickActions = [
+    { name: 'Browse Books', href: '/books', icon: BookOpen, color: 'bg-blue-600' },
+    { name: 'My Orders', href: '/dashboard/orders', icon: Package, color: 'bg-green-600' },
+    { name: 'Wishlist', href: '/wishlist', icon: Heart, color: 'bg-red-600' },
+    { name: 'Account Settings', href: '/dashboard/profile', icon: Settings, color: 'bg-purple-600' }
   ];
 
   const menuItems = [
@@ -138,19 +188,79 @@ const CustomerDashboard = () => {
               {/* Stats Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {dashboardStats.map((stat) => (
-                  <Card key={stat.title}>
+                  <Card key={stat.title} className="hover:shadow-lg transition-shadow">
                     <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">{stat.title}</p>
-                          <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className={`p-3 rounded-lg ${stat.bgColor}`}>
+                          <stat.icon className={`h-6 w-6 ${stat.color}`} />
                         </div>
-                        <stat.icon className={`h-8 w-8 ${stat.color}`} />
+                        <TrendingUp className="h-4 w-4 text-green-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{stat.title}</p>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{stat.value}</p>
+                        <p className="text-xs text-green-600 dark:text-green-400">{stat.change}</p>
                       </div>
                     </CardContent>
                   </Card>
                 ))}
               </div>
+
+              {/* Quick Actions */}
+              <Card>
+                <CardHeader>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Quick Actions</h2>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {quickActions.map((action) => (
+                      <Link key={action.name} href={action.href}>
+                        <div className="p-6 text-center hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors cursor-pointer">
+                          <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mx-auto mb-3`}>
+                            <action.icon className="h-6 w-6 text-white" />
+                          </div>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">{action.name}</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Notifications */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Recent Notifications</h2>
+                    <Button variant="outline" size="sm">
+                      <Bell className="h-4 w-4 mr-2" />
+                      View All
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {notifications.slice(0, 3).map((notification) => (
+                      <div key={notification.id} className={`p-4 rounded-lg border-l-4 ${
+                        notification.type === 'order' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' :
+                        notification.type === 'recommendation' ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20' :
+                        'border-green-500 bg-green-50 dark:bg-green-900/20'
+                      }`}>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-gray-900 dark:text-white">{notification.title}</h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{notification.message}</p>
+                            <p className="text-xs text-gray-500 mt-2">{notification.time}</p>
+                          </div>
+                          {!notification.read && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Recent Orders */}
               <Card>

@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Star, ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, ArrowLeft } from 'lucide-react';
+import { Star, ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, ArrowLeft, BookOpen, Calendar, Globe, Package, ThumbsUp, MessageCircle, Eye } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import Badge from '@/components/ui/Badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import BookCard from '@/components/books/BookCard';
 import Loading from '@/components/ui/Loading';
@@ -24,6 +25,26 @@ const BookDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
+  const [reviews, setReviews] = useState([
+    {
+      id: '1',
+      user: 'Priya Sharma',
+      rating: 5,
+      date: '2024-08-20',
+      comment: 'Excellent book! Really helped me understand financial psychology.',
+      helpful: 12,
+      verified: true
+    },
+    {
+      id: '2',
+      user: 'Rajesh Kumar',
+      rating: 4,
+      date: '2024-08-18',
+      comment: 'Good insights, though some concepts could be explained better.',
+      helpful: 8,
+      verified: true
+    }
+  ]);
 
   useEffect(() => {
     const fetchBookData = async () => {
