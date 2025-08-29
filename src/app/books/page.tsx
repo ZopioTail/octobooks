@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Filter, Grid, List, ChevronLeft, ChevronRight } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -13,20 +13,21 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { getBooks, BookFilters } from '@/lib/books';
 import { Book } from '@/types';
-import { SORT_OPTIONS, PRICE_RANGES, LANGUAGES, BOOK_FORMATS } from '@/lib/constants';
+import { SORT_OPTIONS, PRICE_RANGES, LANGUAGES, BOOK_FORMATS, CATEGORIES } from '@/lib/constants';
 
-const CategoryPage = () => {
-  const params = useParams();
+const BooksPage = () => {
+  const searchParams = useSearchParams();
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-
+  
   const [sortBy, setSortBy] = useState('bestseller');
   const [filters, setFilters] = useState<BookFilters>({
-    category: typeof params.slug === 'string' ? params.slug : '',
+    category: searchParams.get('category') || '',
     author: '',
     publisher: '',
     language: '',
@@ -38,29 +39,24 @@ const CategoryPage = () => {
   });
 
   const booksPerPage = 12;
-  const categoryName = typeof params.slug === 'string'
-    ? params.slug.charAt(0).toUpperCase() + params.slug.slice(1).replace('-', ' ')
-    : 'Books';
 
   useEffect(() => {
     fetchBooks();
-  }, [sortBy, filters, currentPage, params.slug]);
+  }, [sortBy, filters, currentPage]);
 
   const fetchBooks = async () => {
     setLoading(true);
     try {
       const result = await getBooks({
-        filters: {
-          ...filters,
-          category: typeof params.slug === 'string' ? params.slug : ''
-        },
+        filters,
         sortBy: sortBy as any,
         sortOrder: 'desc',
         limitCount: booksPerPage
       });
-
+      
       setBooks(result.books);
       setHasMore(result.hasMore);
+      setTotalPages(Math.ceil(result.books.length / booksPerPage));
     } catch (error) {
       console.error('Error fetching books:', error);
       setBooks([]);
@@ -74,9 +70,19 @@ const CategoryPage = () => {
     setCurrentPage(1);
   };
 
+  const handlePriceRangeChange = (range: string) => {
+    if (range) {
+      const [min, max] = range.split('-').map(Number);
+      setFilters(prev => ({ ...prev, minPrice: min, maxPrice: max }));
+    } else {
+      setFilters(prev => ({ ...prev, minPrice: undefined, maxPrice: undefined }));
+    }
+    setCurrentPage(1);
+  };
+
   const clearFilters = () => {
     setFilters({
-      category: typeof params.slug === 'string' ? params.slug : '',
+      category: '',
       author: '',
       publisher: '',
       language: '',
@@ -93,15 +99,15 @@ const CategoryPage = () => {
     <>
       <Header />
       <main className="flex-1">
-        {/* Category Header */}
+        {/* Page Header */}
         <div className="bg-gray-50 dark:bg-gray-800 py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                {categoryName} Books
+                📚 All Books
               </h1>
               <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-                Discover amazing {categoryName.toLowerCase()} books from top authors and publishers
+                Discover thousands of books across all genres and categories
               </p>
             </div>
           </div>
@@ -115,18 +121,43 @@ const CategoryPage = () => {
                 <CardContent className="p-6">
                   <h3 className="text-lg font-semibold mb-4">Filters</h3>
                   
+                  {/* Category */}
+                  <div className="mb-6">
+                    <Select
+                      label="Category"
+                      value={filters.category || ''}
+                      onChange={(e) => handleFilterChange('category', e.target.value)}
+                      options={[
+                        { value: '', label: 'All Categories' },
+                        ...CATEGORIES.map(cat => ({ value: cat, label: cat }))
+                      ]}
+                    />
+                  </div>
+
                   {/* Price Range */}
                   <div className="mb-6">
                     <h4 className="font-medium mb-3">Price Range</h4>
                     <div className="space-y-2">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="priceRange"
+                          value=""
+                          checked={!filters.minPrice && !filters.maxPrice}
+                          onChange={(e) => handlePriceRangeChange(e.target.value)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm">All Prices</span>
+                      </label>
                       {PRICE_RANGES.map((range) => (
                         <label key={range.label} className="flex items-center">
                           <input
                             type="radio"
                             name="priceRange"
                             value={`${range.min}-${range.max}`}
+                            checked={filters.minPrice === range.min && filters.maxPrice === range.max}
+                            onChange={(e) => handlePriceRangeChange(e.target.value)}
                             className="mr-2"
-                            onChange={(e) => setFilters({...filters, priceRange: e.target.value})}
                           />
                           <span className="text-sm">{range.label}</span>
                         </label>
@@ -136,46 +167,51 @@ const CategoryPage = () => {
 
                   {/* Language */}
                   <div className="mb-6">
-                    <h4 className="font-medium mb-3">Language</h4>
-                    <select
-                      value={filters.language}
-                      onChange={(e) => setFilters({...filters, language: e.target.value})}
-                      className="w-full p-2 border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600"
-                    >
-                      <option value="">All Languages</option>
-                      {LANGUAGES.map((lang) => (
-                        <option key={lang} value={lang}>{lang}</option>
-                      ))}
-                    </select>
+                    <Select
+                      label="Language"
+                      value={filters.language || ''}
+                      onChange={(e) => handleFilterChange('language', e.target.value)}
+                      options={[
+                        { value: '', label: 'All Languages' },
+                        ...LANGUAGES.map(lang => ({ value: lang, label: lang }))
+                      ]}
+                    />
                   </div>
 
                   {/* Format */}
                   <div className="mb-6">
-                    <h4 className="font-medium mb-3">Format</h4>
-                    <div className="space-y-2">
-                      {BOOK_FORMATS.map((format) => (
-                        <label key={format} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            className="mr-2"
-                            onChange={(e) => {
-                              // Handle format filter
-                            }}
-                          />
-                          <span className="text-sm">{format}</span>
-                        </label>
-                      ))}
-                    </div>
+                    <Select
+                      label="Format"
+                      value={filters.format || ''}
+                      onChange={(e) => handleFilterChange('format', e.target.value)}
+                      options={[
+                        { value: '', label: 'All Formats' },
+                        ...BOOK_FORMATS.map(format => ({ value: format, label: format }))
+                      ]}
+                    />
                   </div>
 
-                  {/* Author */}
+                  {/* Author Search */}
                   <div className="mb-6">
                     <Input
                       label="Author"
                       placeholder="Search by author"
-                      value={filters.author}
-                      onChange={(e) => setFilters({...filters, author: e.target.value})}
+                      value={filters.author || ''}
+                      onChange={(e) => handleFilterChange('author', e.target.value)}
                     />
+                  </div>
+
+                  {/* In Stock Only */}
+                  <div className="mb-6">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={filters.inStock}
+                        onChange={(e) => handleFilterChange('inStock', e.target.checked)}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">In Stock Only</span>
+                    </label>
                   </div>
 
                   {/* Clear Filters */}
@@ -183,14 +219,7 @@ const CategoryPage = () => {
                     variant="outline"
                     size="sm"
                     className="w-full"
-                    onClick={() => setFilters({
-                      priceRange: '',
-                      language: '',
-                      format: '',
-                      author: '',
-                      publisher: '',
-                      rating: 0
-                    })}
+                    onClick={clearFilters}
                   >
                     Clear All Filters
                   </Button>
@@ -219,17 +248,11 @@ const CategoryPage = () => {
 
                 <div className="flex items-center space-x-4">
                   {/* Sort */}
-                  <select
+                  <Select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="p-2 border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600"
-                  >
-                    {SORT_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
+                    options={SORT_OPTIONS}
+                  />
 
                   {/* View Mode */}
                   <div className="flex border border-gray-300 rounded-lg dark:border-gray-600">
@@ -259,28 +282,57 @@ const CategoryPage = () => {
                 <>
                   {/* Books Grid */}
                   <div className={`grid gap-6 ${
-                    viewMode === 'grid'
-                      ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                    viewMode === 'grid' 
+                      ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
                       : 'grid-cols-1'
                   }`}>
                     {books.map((book) => (
-                      <BookCard
-                        key={book.bookId}
-                        book={book}
+                      <BookCard 
+                        key={book.bookId} 
+                        book={book} 
                         variant={viewMode === 'list' ? 'list' : 'default'}
                       />
                     ))}
                   </div>
 
                   {/* Pagination */}
-                  {hasMore && (
-                    <div className="text-center mt-12">
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-center space-x-4 mt-12">
                       <Button
                         variant="outline"
-                        size="lg"
-                        onClick={() => setCurrentPage(prev => prev + 1)}
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
                       >
-                        Load More Books
+                        <ChevronLeft className="h-4 w-4 mr-2" />
+                        Previous
+                      </Button>
+                      
+                      <div className="flex items-center space-x-2">
+                        {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                          const pageNum = i + 1;
+                          return (
+                            <button
+                              key={pageNum}
+                              onClick={() => setCurrentPage(pageNum)}
+                              className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
+                                currentPage === pageNum
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+                              }`}
+                            >
+                              {pageNum}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages}
+                      >
+                        Next
+                        <ChevronRight className="h-4 w-4 ml-2" />
                       </Button>
                     </div>
                   )}
@@ -289,10 +341,10 @@ const CategoryPage = () => {
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">📚</div>
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                    No books found in {categoryName}
+                    No books found
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    Try adjusting your filters or browse other categories.
+                    Try adjusting your filters or search terms.
                   </p>
                   <Button variant="outline" onClick={clearFilters}>
                     Clear Filters
@@ -308,4 +360,4 @@ const CategoryPage = () => {
   );
 };
 
-export default CategoryPage;
+export default BooksPage;

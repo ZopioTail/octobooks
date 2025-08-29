@@ -2,13 +2,19 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Search, ShoppingCart, User, Menu, X, Heart } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, Heart, LogOut, Settings } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCart } from '@/contexts/CartContext';
+import { signOutUser } from '@/lib/auth';
+import { cn, getInitials } from '@/lib/utils';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const { isAuthenticated, userProfile } = useAuth();
+  const { itemCount } = useCart();
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -82,19 +88,80 @@ const Header = () => {
             {/* Cart */}
             <Link href="/cart" className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 relative">
               <ShoppingCart className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                0
-              </span>
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {itemCount > 99 ? '99+' : itemCount}
+                </span>
+              )}
             </Link>
 
             {/* User menu */}
             <div className="relative">
-              <Link href="/auth/login">
-                <Button variant="outline" size="sm" className="hidden sm:flex">
-                  <User className="h-4 w-4 mr-2" />
-                  Login
-                </Button>
-              </Link>
+              {isAuthenticated && userProfile ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+                      {userProfile.profileImage ? (
+                        <img
+                          src={userProfile.profileImage}
+                          alt={userProfile.name}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                          {getInitials(userProfile.name)}
+                        </span>
+                      )}
+                    </div>
+                    <span className="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {userProfile.name.split(' ')[0]}
+                    </span>
+                  </button>
+
+                  {/* User Dropdown Menu */}
+                  {showUserMenu && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
+                      <Link
+                        href="/dashboard"
+                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={() => setShowUserMenu(false)}
+                      >
+                        <User className="h-4 w-4 inline mr-2" />
+                        Dashboard
+                      </Link>
+                      <Link
+                        href="/dashboard/profile"
+                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={() => setShowUserMenu(false)}
+                      >
+                        <Settings className="h-4 w-4 inline mr-2" />
+                        Settings
+                      </Link>
+                      <hr className="my-2 border-gray-200 dark:border-gray-700" />
+                      <button
+                        onClick={async () => {
+                          await signOutUser();
+                          setShowUserMenu(false);
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        <LogOut className="h-4 w-4 inline mr-2" />
+                        Sign Out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link href="/auth/login">
+                  <Button variant="outline" size="sm" className="hidden sm:flex">
+                    <User className="h-4 w-4 mr-2" />
+                    Login
+                  </Button>
+                </Link>
+              )}
             </div>
 
             {/* Mobile menu button */}
@@ -139,14 +206,55 @@ const Header = () => {
                 ))}
               </nav>
 
-              {/* Mobile auth button */}
+              {/* Mobile auth section */}
               <div className="px-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <Link href="/auth/login" onClick={() => setIsMenuOpen(false)}>
-                  <Button variant="primary" className="w-full">
-                    <User className="h-4 w-4 mr-2" />
-                    Login / Sign Up
-                  </Button>
-                </Link>
+                {isAuthenticated && userProfile ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-3 px-3 py-2">
+                      <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+                        {userProfile.profileImage ? (
+                          <img
+                            src={userProfile.profileImage}
+                            alt={userProfile.name}
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                            {getInitials(userProfile.name)}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">{userProfile.name}</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 capitalize">{userProfile.role}</p>
+                      </div>
+                    </div>
+                    <Link href="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                      <Button variant="outline" className="w-full">
+                        <User className="h-4 w-4 mr-2" />
+                        Dashboard
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      className="w-full text-red-600 hover:text-red-700"
+                      onClick={async () => {
+                        await signOutUser();
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign Out
+                    </Button>
+                  </div>
+                ) : (
+                  <Link href="/auth/login" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="primary" className="w-full">
+                      <User className="h-4 w-4 mr-2" />
+                      Login / Sign Up
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
           </div>

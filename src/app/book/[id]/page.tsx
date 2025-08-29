@@ -1,62 +1,140 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useParams } from 'next/navigation';
-import { Star, ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { Star, ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, ArrowLeft } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import BookCard from '@/components/books/BookCard';
+import Loading from '@/components/ui/Loading';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { useCart } from '@/contexts/CartContext';
+import { getBookById, getRelatedBooks } from '@/lib/books';
+import { Book } from '@/types';
 import { formatPrice } from '@/lib/utils';
 
 const BookDetailPage = () => {
   const params = useParams();
+  const router = useRouter();
+  const { addItem, isInCart } = useCart();
+  const [book, setBook] = useState<Book | null>(null);
+  const [relatedBooks, setRelatedBooks] = useState<Book[]>([]);
+  const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedFormat, setSelectedFormat] = useState('Paperback');
+  const [activeTab, setActiveTab] = useState('description');
 
-  // Sample book data - this would come from Firebase in production
-  const book = {
-    id: params.id,
-    title: 'The Psychology of Money',
-    subtitle: 'Timeless lessons on wealth, greed, and happiness',
-    author: 'Morgan Housel',
-    publisher: 'Jaico Publishing House',
-    isbn: '978-93-5322-581-4',
-    category: 'Business & Finance',
-    tags: ['Finance', 'Psychology', 'Investment', 'Money Management'],
-    price: 399,
-    discount: 25,
-    finalPrice: 299,
-    stock: 150,
-    language: 'English',
-    formats: ['Paperback', 'eBook', 'Audiobook'],
-    coverImage: '/api/placeholder/400/600',
-    description: `Doing well with money isn't necessarily about what you know. It's about how you behave. And behavior is hard to teach, even to really smart people.
+  useEffect(() => {
+    const fetchBookData = async () => {
+      if (!params.id || typeof params.id !== 'string') return;
 
-Money—investing, personal finance, and business decisions—is typically taught as a math-based field, where data and formulas tell us exactly what to do. But in the real world people don't make financial decisions on a spreadsheet. They make them at the dinner table, or in a meeting room, where personal history, your own unique view of the world, ego, pride, marketing, and odd incentives are scrambled together.
+      try {
+        const bookData = await getBookById(params.id);
+        if (bookData) {
+          setBook(bookData);
+          setSelectedFormat(bookData.format);
 
-In The Psychology of Money, award-winning author Morgan Housel shares 19 short stories exploring the strange ways people think about money and teaches you how to make better sense of one of life's most important topics.`,
-    rating: 4.8,
-    reviewsCount: 1250,
-    pageCount: 256,
-    edition: '1st Edition',
-    bestseller: true,
-    createdAt: '2024-01-15T00:00:00Z'
+          // Fetch related books
+          const related = await getRelatedBooks(
+            bookData.bookId,
+            bookData.category,
+            bookData.authorId,
+            6
+          );
+          setRelatedBooks(related);
+        } else {
+          // Book not found, redirect to 404 or home
+          router.push('/');
+        }
+      } catch (error) {
+        console.error('Error fetching book:', error);
+        router.push('/');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookData();
+  }, [params.id, router]);
+
+  const handleAddToCart = () => {
+    if (!book) return;
+
+    addItem({
+      bookId: book.bookId,
+      title: book.title,
+      coverImage: book.coverImage,
+      price: book.price,
+      finalPrice: book.finalPrice,
+      quantity,
+      stock: book.stock
+    });
   };
 
-  const formatPrices = {
-    'Paperback': { price: 399, finalPrice: 299 },
-    'eBook': { price: 199, finalPrice: 149 },
-    'Audiobook': { price: 299, finalPrice: 224 }
+  const handleBuyNow = () => {
+    handleAddToCart();
+    router.push('/checkout');
   };
 
-  const currentPrice = formatPrices[selectedFormat as keyof typeof formatPrices];
+  if (loading) {
+    return (
+      <>
+        <Header />
+        <main className="flex-1 py-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center py-20">
+              <Loading size="lg" />
+              <p className="mt-4 text-gray-600 dark:text-gray-400">Loading book details...</p>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  if (!book) {
+    return (
+      <>
+        <Header />
+        <main className="flex-1 py-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center py-20">
+              <div className="text-6xl mb-4">📚</div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                Book Not Found
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 mb-8">
+                The book you're looking for doesn't exist or has been removed.
+              </p>
+              <Button onClick={() => router.push('/')} variant="primary">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Home
+              </Button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
       <Header />
       <main className="flex-1 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Breadcrumb */}
+          <nav className="mb-8">
+            <ol className="flex items-center space-x-2 text-sm text-gray-500">
+              <li><a href="/" className="hover:text-blue-600">Home</a></li>
+              <li>/</li>
+              <li><a href={`/category/${book.category.toLowerCase()}`} className="hover:text-blue-600">{book.category}</a></li>
+              <li>/</li>
+              <li className="text-gray-900 dark:text-white">{book.title}</li>
+            </ol>
+          </nav>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Book Image */}
             <div className="space-y-4">
@@ -96,9 +174,9 @@ In The Psychology of Money, award-winning author Morgan Housel shares 19 short s
                   </p>
                 )}
                 <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
-                  <span>by <Link href={`/author/${book.author}`} className="text-blue-600 hover:underline">{book.author}</Link></span>
+                  <span>by <Link href={`/author/${book.authorId}`} className="text-blue-600 hover:underline">{book.authorName}</Link></span>
                   <span>•</span>
-                  <span>{book.publisher}</span>
+                  <span>{book.publisherName}</span>
                   <span>•</span>
                   <span>{book.pageCount} pages</span>
                 </div>
@@ -128,19 +206,11 @@ In The Psychology of Money, award-winning author Morgan Housel shares 19 short s
                   Format
                 </label>
                 <div className="flex space-x-2">
-                  {book.formats.map((format) => (
-                    <button
-                      key={format}
-                      onClick={() => setSelectedFormat(format)}
-                      className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                        selectedFormat === format
-                          ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
-                          : 'border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800'
-                      }`}
-                    >
-                      {format}
-                    </button>
-                  ))}
+                  <button
+                    className="px-4 py-2 rounded-lg border border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 text-sm font-medium"
+                  >
+                    {book.format}
+                  </button>
                 </div>
               </div>
 
@@ -148,15 +218,15 @@ In The Psychology of Money, award-winning author Morgan Housel shares 19 short s
               <div className="space-y-2">
                 <div className="flex items-center space-x-4">
                   <span className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {formatPrice(currentPrice.finalPrice)}
+                    {formatPrice(book.finalPrice)}
                   </span>
-                  {currentPrice.price !== currentPrice.finalPrice && (
+                  {book.price !== book.finalPrice && (
                     <>
                       <span className="text-xl text-gray-500 line-through">
-                        {formatPrice(currentPrice.price)}
+                        {formatPrice(book.price)}
                       </span>
                       <span className="text-lg text-green-600 font-medium">
-                        {Math.round(((currentPrice.price - currentPrice.finalPrice) / currentPrice.price) * 100)}% off
+                        {Math.round(((book.price - book.finalPrice) / book.price) * 100)}% off
                       </span>
                     </>
                   )}
@@ -195,9 +265,15 @@ In The Psychology of Money, award-winning author Morgan Housel shares 19 short s
                 </div>
 
                 <div className="flex space-x-4">
-                  <Button variant="primary" size="lg" className="flex-1">
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    className="flex-1"
+                    onClick={handleAddToCart}
+                    disabled={book.stock === 0 || isInCart(book.bookId)}
+                  >
                     <ShoppingCart className="h-5 w-5 mr-2" />
-                    Add to Cart
+                    {isInCart(book.bookId) ? 'In Cart' : 'Add to Cart'}
                   </Button>
                   <Button variant="outline" size="lg">
                     <Heart className="h-5 w-5" />
@@ -207,7 +283,13 @@ In The Psychology of Money, award-winning author Morgan Housel shares 19 short s
                   </Button>
                 </div>
 
-                <Button variant="secondary" size="lg" className="w-full">
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  className="w-full"
+                  onClick={handleBuyNow}
+                  disabled={book.stock === 0}
+                >
                   Buy Now
                 </Button>
               </div>
@@ -234,74 +316,131 @@ In The Psychology of Money, award-winning author Morgan Housel shares 19 short s
           <div className="mt-16">
             <div className="border-b border-gray-200 dark:border-gray-700">
               <nav className="-mb-px flex space-x-8">
-                <button className="border-b-2 border-blue-500 py-2 px-1 text-sm font-medium text-blue-600">
+                <button
+                  onClick={() => setActiveTab('description')}
+                  className={`border-b-2 py-2 px-1 text-sm font-medium ${
+                    activeTab === 'description'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
                   Description
                 </button>
-                <button className="border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700">
+                <button
+                  onClick={() => setActiveTab('reviews')}
+                  className={`border-b-2 py-2 px-1 text-sm font-medium ${
+                    activeTab === 'reviews'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
                   Reviews ({book.reviewsCount})
                 </button>
-                <button className="border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700">
+                <button
+                  onClick={() => setActiveTab('details')}
+                  className={`border-b-2 py-2 px-1 text-sm font-medium ${
+                    activeTab === 'details'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
                   Details
                 </button>
               </nav>
             </div>
 
             <div className="py-8">
-              <div className="prose max-w-none dark:prose-invert">
-                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                  {book.description}
-                </p>
-              </div>
+              {activeTab === 'description' && (
+                <div className="prose max-w-none dark:prose-invert">
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">
+                    {book.description}
+                  </p>
+                </div>
+              )}
 
-              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-                <Card>
-                  <CardHeader>
-                    <h3 className="text-lg font-semibold">Book Details</h3>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">ISBN:</span>
-                      <span className="font-medium">{book.isbn}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Language:</span>
-                      <span className="font-medium">{book.language}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Pages:</span>
-                      <span className="font-medium">{book.pageCount}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Edition:</span>
-                      <span className="font-medium">{book.edition}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Category:</span>
-                      <span className="font-medium">{book.category}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <h3 className="text-lg font-semibold">Tags</h3>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {book.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full dark:bg-blue-900/20 dark:text-blue-300"
-                        >
-                          {tag}
+              {activeTab === 'details' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <Card>
+                    <CardHeader>
+                      <h3 className="text-lg font-semibold">Book Details</h3>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">ISBN:</span>
+                        <span className="font-medium">{book.isbn}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Language:</span>
+                        <span className="font-medium">{book.language}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Pages:</span>
+                        <span className="font-medium">{book.pageCount}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Edition:</span>
+                        <span className="font-medium">{book.edition}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Category:</span>
+                        <span className="font-medium">{book.category}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Stock:</span>
+                        <span className={`font-medium ${book.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {book.stock > 0 ? `${book.stock} available` : 'Out of stock'}
                         </span>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <h3 className="text-lg font-semibold">Tags</h3>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2">
+                        {book.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full dark:bg-blue-900/20 dark:text-blue-300"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {activeTab === 'reviews' && (
+                <div className="text-center py-12">
+                  <div className="text-4xl mb-4">⭐</div>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                    Reviews Coming Soon
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Review system will be implemented in the next phase.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
+
+          {/* You May Also Like */}
+          {relatedBooks.length > 0 && (
+            <div className="mt-16">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">
+                📚 You May Also Like
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+                {relatedBooks.map((relatedBook) => (
+                  <BookCard key={relatedBook.bookId} book={relatedBook} variant="compact" />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </main>
       <Footer />
