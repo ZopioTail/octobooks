@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Star, ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, ArrowLeft } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
@@ -22,7 +23,6 @@ const BookDetailPage = () => {
   const [relatedBooks, setRelatedBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
-  const [selectedFormat, setSelectedFormat] = useState('Paperback');
   const [activeTab, setActiveTab] = useState('description');
 
   useEffect(() => {
@@ -33,7 +33,6 @@ const BookDetailPage = () => {
         const bookData = await getBookById(params.id);
         if (bookData) {
           setBook(bookData);
-          setSelectedFormat(bookData.format);
 
           // Fetch related books
           const related = await getRelatedBooks(

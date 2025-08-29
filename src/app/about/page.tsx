@@ -53,13 +53,13 @@ const AboutPage = () => {
               </h2>
               <div className="text-gray-700 dark:text-gray-300 space-y-6">
                 <p>
-                  Founded with a passion for books and reading, Octobooks began as a small initiative to make quality books accessible to everyone. Today, we've grown into a comprehensive online bookstore that serves thousands of readers, authors, and publishers worldwide.
+                  Founded with a passion for books and reading, Octobooks began as a small initiative to make quality books accessible to everyone. Today, we&apos;ve grown into a comprehensive online bookstore that serves thousands of readers, authors, and publishers worldwide.
                 </p>
                 <p>
                   Our mission is simple: to create a platform where book lovers can discover, purchase, and enjoy books while supporting authors and publishers in their literary journey. We believe that books have the power to transform lives, spark imagination, and build bridges between cultures.
                 </p>
                 <p>
-                  At Octobooks, we're not just selling books – we're building a community of readers, writers, and publishers who share a common love for literature and learning.
+                  At Octobooks, we&apos;re not just selling books – we&apos;re building a community of readers, writers, and publishers who share a common love for literature and learning.
                 </p>
               </div>
             </div>

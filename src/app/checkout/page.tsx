@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CreditCard, Truck, MapPin, User, Phone, Mail } from 'lucide-react';
+import { CreditCard, Truck, MapPin, User, Phone, Mail, Shield } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
@@ -16,7 +16,7 @@ import { processRazorpayPayment } from '@/lib/payments';
 
 const CheckoutPage = () => {
   const router = useRouter();
-  const { items, total, clearCart } = useCart();
+  const { items, clearCart } = useCart();
   const { isAuthenticated, userProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1); // 1: Address, 2: Payment, 3: Confirmation

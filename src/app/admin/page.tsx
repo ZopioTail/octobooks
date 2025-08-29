@@ -1,12 +1,12 @@
 'use client';
 
 import React from 'react';
-import { 
-  BookOpen, 
-  Users, 
-  ShoppingCart, 
-  TrendingUp, 
-  DollarSign, 
+import Link from 'next/link';
+import {
+  BookOpen,
+  Users,
+  ShoppingCart,
+  DollarSign,
   Package,
   UserCheck,
   FileText
