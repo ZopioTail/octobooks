@@ -2,8 +2,8 @@
 const nextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
-    serverComponentsExternalPackages: ['firebase-admin']
   },
+  serverExternalPackages: ['firebase-admin'],
   eslint: {
     // Warning: This allows production builds to successfully complete even if
     // your project has ESLint errors.
@@ -24,7 +24,6 @@ const nextConfig = {
   poweredByHeader: false,
   generateEtags: true,
   trailingSlash: false,
-  swcMinify: true,
 }
 
 module.exports = nextConfig
