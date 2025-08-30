@@ -28,15 +28,15 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 dark:bg-gray-900/95 dark:border-gray-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform">
-                <span className="text-white font-bold text-xl">📚</span>
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform">
+                <span className="text-white font-bold text-lg">📚</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+                <span className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">
                   Octobooks
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-400 -mt-1 hidden sm:block">
@@ -47,55 +47,55 @@ const Header = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-10">
+          <nav className="hidden lg:flex items-center space-x-8">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 transition-colors font-medium text-lg relative group"
+                className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 transition-colors font-medium relative group px-3 py-2"
               >
                 {item.name}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all group-hover:w-full"></span>
+                <span className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-blue-600 transition-all group-hover:w-4/5"></span>
               </Link>
             ))}
           </nav>
 
           {/* Search Bar */}
-          <div className="hidden lg:flex flex-1 max-w-lg mx-8">
+          <div className="hidden lg:flex flex-1 max-w-md mx-6">
             <div className="relative w-full">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" />
+                <Search className="h-4 w-4 text-gray-400" />
               </div>
               <input
                 type="text"
-                placeholder="Search books, authors, publishers..."
+                placeholder="Search books, authors..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white text-sm"
               />
             </div>
           </div>
 
           {/* Right side actions */}
-          <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-4">
             {/* Mobile search button */}
-            <button className="lg:hidden p-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all">
-              <Search className="h-6 w-6" />
+            <button className="lg:hidden p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all">
+              <Search className="h-5 w-5" />
             </button>
 
             {/* Wishlist */}
-            <Link href="/wishlist" className="p-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 relative hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all">
-              <Heart className="h-6 w-6" />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center shadow-lg">
+            <Link href="/wishlist" className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 relative hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all">
+              <Heart className="h-5 w-5" />
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center shadow-lg">
                 0
               </span>
             </Link>
 
             {/* Cart */}
-            <Link href="/cart" className="p-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 relative hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all">
-              <ShoppingCart className="h-6 w-6" />
+            <Link href="/cart" className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 relative hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all">
+              <ShoppingCart className="h-5 w-5" />
               {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center shadow-lg animate-pulse">
+                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center shadow-lg animate-pulse">
                   {itemCount > 99 ? '99+' : itemCount}
                 </span>
               )}
@@ -107,9 +107,9 @@ const Header = () => {
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    className="flex items-center space-x-2 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                   >
-                    <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+                    <div className="w-7 h-7 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
                       {userProfile.profileImage ? (
                         <img
                           src={userProfile.profileImage}
@@ -117,7 +117,7 @@ const Header = () => {
                           className="w-full h-full rounded-full object-cover"
                         />
                       ) : (
-                        <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                        <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
                           {getInitials(userProfile.name)}
                         </span>
                       )}
@@ -162,8 +162,8 @@ const Header = () => {
                 </div>
               ) : (
                 <Link href="/auth/login">
-                  <Button variant="outline" size="sm" className="hidden sm:flex">
-                    <User className="h-4 w-4 mr-2" />
+                  <Button variant="outline" size="sm" className="hidden sm:flex text-sm">
+                    <User className="h-4 w-4 mr-1.5" />
                     Login
                   </Button>
                 </Link>
@@ -173,7 +173,7 @@ const Header = () => {
             {/* Mobile menu button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="md:hidden p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             >
               {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -188,12 +188,12 @@ const Header = () => {
               <div className="px-2">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-5 w-5 text-gray-400" />
+                    <Search className="h-4 w-4 text-gray-400" />
                   </div>
                   <input
                     type="text"
                     placeholder="Search books..."
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white text-sm"
                   />
                 </div>
               </div>
@@ -204,7 +204,7 @@ const Header = () => {
                   <Link
                     key={item.name}
                     href={item.href}
-                    className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-lg dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-800 transition-colors"
+                    className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-lg dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-800 transition-colors text-sm"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {item.name}
@@ -217,7 +217,7 @@ const Header = () => {
                 {isAuthenticated && userProfile ? (
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3 px-3 py-2">
-                      <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+                      <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
                         {userProfile.profileImage ? (
                           <img
                             src={userProfile.profileImage}
@@ -225,25 +225,25 @@ const Header = () => {
                             className="w-full h-full rounded-full object-cover"
                           />
                         ) : (
-                          <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                          <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
                             {getInitials(userProfile.name)}
                           </span>
                         )}
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-white">{userProfile.name}</p>
+                        <p className="font-medium text-gray-900 dark:text-white text-sm">{userProfile.name}</p>
                         <p className="text-xs text-gray-600 dark:text-gray-400 capitalize">{userProfile.role}</p>
                       </div>
                     </div>
                     <Link href="/dashboard" onClick={() => setIsMenuOpen(false)}>
-                      <Button variant="outline" className="w-full">
+                      <Button variant="outline" className="w-full text-sm">
                         <User className="h-4 w-4 mr-2" />
                         Dashboard
                       </Button>
                     </Link>
                     <Button
                       variant="ghost"
-                      className="w-full text-red-600 hover:text-red-700"
+                      className="w-full text-red-600 hover:text-red-700 text-sm"
                       onClick={async () => {
                         await signOutUser();
                         setIsMenuOpen(false);
@@ -255,7 +255,7 @@ const Header = () => {
                   </div>
                 ) : (
                   <Link href="/auth/login" onClick={() => setIsMenuOpen(false)}>
-                    <Button variant="primary" className="w-full">
+                    <Button variant="primary" className="w-full text-sm">
                       <User className="h-4 w-4 mr-2" />
                       Login / Sign Up
                     </Button>

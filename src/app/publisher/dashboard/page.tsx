@@ -7,8 +7,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Select from '@/components/ui/Select';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import { formatPrice } from '@/lib/utils';
 
 const PublisherDashboard = () => {
@@ -87,41 +86,39 @@ const PublisherDashboard = () => {
   ];
 
   return (
-    <>
-      <Header />
-      <main className="flex-1 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                  Publisher Dashboard
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Manage your catalog and track performance across all your publications.
-                </p>
-              </div>
-              <div className="flex space-x-4">
-                <Select
-                  value={timeRange}
-                  onChange={(e) => setTimeRange(e.target.value)}
-                  options={[
-                    { value: 'week', label: 'Last Week' },
-                    { value: 'month', label: 'Last Month' },
-                    { value: 'quarter', label: 'Last Quarter' },
-                    { value: 'year', label: 'Last Year' }
-                  ]}
-                />
-                <Link href="/publisher/books/new">
-                  <Button variant="primary">
-                    <Plus className="h-5 w-5 mr-2" />
-                    Add Book
-                  </Button>
-                </Link>
-              </div>
+    <DashboardLayout title="Publisher Dashboard">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                Publisher Dashboard
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                Manage your catalog and track performance across all your publications.
+              </p>
+            </div>
+            <div className="flex space-x-4">
+              <Select
+                value={timeRange}
+                onChange={(e) => setTimeRange(e.target.value)}
+                options={[
+                  { value: 'week', label: 'Last Week' },
+                  { value: 'month', label: 'Last Month' },
+                  { value: 'quarter', label: 'Last Quarter' },
+                  { value: 'year', label: 'Last Year' }
+                ]}
+              />
+              <Link href="/publisher/books/new">
+                <Button variant="primary">
+                  <Plus className="h-5 w-5 mr-2" />
+                  Add Book
+                </Button>
+              </Link>
             </div>
           </div>
+        </div>
 
           {/* Stats Overview */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -258,11 +255,9 @@ const PublisherDashboard = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
         </div>
-      </main>
-      <Footer />
-    </>
+      </div>
+    </DashboardLayout>
   );
 };
 

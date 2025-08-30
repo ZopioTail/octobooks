@@ -13,8 +13,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import { formatPrice } from '@/lib/utils';
 
 const AdminDashboard = () => {
@@ -97,19 +96,17 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <>
-      <Header />
-      <main className="flex-1 bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Admin Dashboard
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Welcome back! Here's what's happening with your bookstore today.
-            </p>
-          </div>
+    <DashboardLayout title="Admin Dashboard">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Admin Dashboard
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Welcome back! Here's what's happening with your bookstore today.
+          </p>
+        </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -233,11 +230,9 @@ const AdminDashboard = () => {
                 </CardContent>
               </Card>
             </div>
-          </div>
         </div>
-      </main>
-      <Footer />
-    </>
+      </div>
+    </DashboardLayout>
   );
 };
 

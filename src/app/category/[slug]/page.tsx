@@ -74,6 +74,16 @@ const CategoryPage = () => {
     setCurrentPage(1);
   };
 
+  const handlePriceRangeChange = (range: string) => {
+    if (range) {
+      const [min, max] = range.split('-').map(Number);
+      setFilters(prev => ({ ...prev, minPrice: min, maxPrice: max }));
+    } else {
+      setFilters(prev => ({ ...prev, minPrice: undefined, maxPrice: undefined }));
+    }
+    setCurrentPage(1);
+  };
+
   const clearFilters = () => {
     setFilters({
       category: typeof params.slug === 'string' ? params.slug : '',
@@ -119,14 +129,26 @@ const CategoryPage = () => {
                   <div className="mb-6">
                     <h4 className="font-medium mb-3">Price Range</h4>
                     <div className="space-y-2">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="priceRange"
+                          value=""
+                          checked={!filters.minPrice && !filters.maxPrice}
+                          onChange={(e) => handlePriceRangeChange(e.target.value)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm">All Prices</span>
+                      </label>
                       {PRICE_RANGES.map((range) => (
                         <label key={range.label} className="flex items-center">
                           <input
                             type="radio"
                             name="priceRange"
                             value={`${range.min}-${range.max}`}
+                            checked={filters.minPrice === range.min && filters.maxPrice === range.max}
+                            onChange={(e) => handlePriceRangeChange(e.target.value)}
                             className="mr-2"
-                            onChange={(e) => setFilters({...filters, priceRange: e.target.value})}
                           />
                           <span className="text-sm">{range.label}</span>
                         </label>
@@ -136,36 +158,28 @@ const CategoryPage = () => {
 
                   {/* Language */}
                   <div className="mb-6">
-                    <h4 className="font-medium mb-3">Language</h4>
-                    <select
-                      value={filters.language}
-                      onChange={(e) => setFilters({...filters, language: e.target.value})}
-                      className="w-full p-2 border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600"
-                    >
-                      <option value="">All Languages</option>
-                      {LANGUAGES.map((lang) => (
-                        <option key={lang} value={lang}>{lang}</option>
-                      ))}
-                    </select>
+                    <Select
+                      label="Language"
+                      value={filters.language || ''}
+                      onChange={(e) => handleFilterChange('language', e.target.value)}
+                      options={[
+                        { value: '', label: 'All Languages' },
+                        ...LANGUAGES.map(lang => ({ value: lang, label: lang }))
+                      ]}
+                    />
                   </div>
 
                   {/* Format */}
                   <div className="mb-6">
-                    <h4 className="font-medium mb-3">Format</h4>
-                    <div className="space-y-2">
-                      {BOOK_FORMATS.map((format) => (
-                        <label key={format} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            className="mr-2"
-                            onChange={(e) => {
-                              // Handle format filter
-                            }}
-                          />
-                          <span className="text-sm">{format}</span>
-                        </label>
-                      ))}
-                    </div>
+                    <Select
+                      label="Format"
+                      value={filters.format || ''}
+                      onChange={(e) => handleFilterChange('format', e.target.value)}
+                      options={[
+                        { value: '', label: 'All Formats' },
+                        ...BOOK_FORMATS.map(format => ({ value: format, label: format }))
+                      ]}
+                    />
                   </div>
 
                   {/* Author */}
@@ -173,9 +187,22 @@ const CategoryPage = () => {
                     <Input
                       label="Author"
                       placeholder="Search by author"
-                      value={filters.author}
-                      onChange={(e) => setFilters({...filters, author: e.target.value})}
+                      value={filters.author || ''}
+                      onChange={(e) => handleFilterChange('author', e.target.value)}
                     />
+                  </div>
+
+                  {/* In Stock Only */}
+                  <div className="mb-6">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={filters.inStock}
+                        onChange={(e) => handleFilterChange('inStock', e.target.checked)}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">In Stock Only</span>
+                    </label>
                   </div>
 
                   {/* Clear Filters */}
@@ -183,14 +210,7 @@ const CategoryPage = () => {
                     variant="outline"
                     size="sm"
                     className="w-full"
-                    onClick={() => setFilters({
-                      priceRange: '',
-                      language: '',
-                      format: '',
-                      author: '',
-                      publisher: '',
-                      rating: 0
-                    })}
+                    onClick={clearFilters}
                   >
                     Clear All Filters
                   </Button>
@@ -219,17 +239,11 @@ const CategoryPage = () => {
 
                 <div className="flex items-center space-x-4">
                   {/* Sort */}
-                  <select
+                  <Select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="p-2 border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600"
-                  >
-                    {SORT_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
+                    options={SORT_OPTIONS}
+                  />
 
                   {/* View Mode */}
                   <div className="flex border border-gray-300 rounded-lg dark:border-gray-600">

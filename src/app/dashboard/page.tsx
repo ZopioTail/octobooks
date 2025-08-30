@@ -6,8 +6,7 @@ import { User, Package, Heart, CreditCard, Settings, LogOut, Bell, TrendingUp, B
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import { formatPrice } from '@/lib/utils';
 
 const CustomerDashboard = () => {
@@ -129,61 +128,59 @@ const CustomerDashboard = () => {
   ];
 
   return (
-    <>
-      <Header />
-      <main className="flex-1 bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Sidebar */}
-            <div className="lg:col-span-1">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                      <User className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white">{user.name}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{user.email}</p>
-                    </div>
+    <DashboardLayout title={`Welcome back, ${user.name}!`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Sidebar */}
+          <div className="lg:col-span-1">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <User className="h-6 w-6 text-blue-600" />
                   </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <nav className="space-y-1">
-                    {menuItems.map((item) => (
-                      <a
-                        key={item.name}
-                        href={item.href}
-                        className={`flex items-center space-x-3 px-6 py-3 text-sm font-medium transition-colors ${
-                          item.active
-                            ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600 dark:bg-blue-900/20 dark:text-blue-300'
-                            : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800'
-                        }`}
-                      >
-                        <item.icon className="h-5 w-5" />
-                        <span>{item.name}</span>
-                      </a>
-                    ))}
-                    <button className="flex items-center space-x-3 px-6 py-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 w-full text-left">
-                      <LogOut className="h-5 w-5" />
-                      <span>Sign Out</span>
-                    </button>
-                  </nav>
-                </CardContent>
-              </Card>
-            </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">{user.name}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{user.email}</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <nav className="space-y-1">
+                  {menuItems.map((item) => (
+                    <a
+                      key={item.name}
+                      href={item.href}
+                      className={`flex items-center space-x-3 px-6 py-3 text-sm font-medium transition-colors ${
+                        item.active
+                          ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600 dark:bg-blue-900/20 dark:text-blue-300'
+                          : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800'
+                      }`}
+                    >
+                      <item.icon className="h-5 w-5" />
+                      <span>{item.name}</span>
+                    </a>
+                  ))}
+                  <button className="flex items-center space-x-3 px-6 py-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 w-full text-left">
+                    <LogOut className="h-5 w-5" />
+                    <span>Sign Out</span>
+                  </button>
+                </nav>
+              </CardContent>
+            </Card>
+          </div>
 
-            {/* Main Content */}
-            <div className="lg:col-span-3 space-y-8">
-              {/* Welcome Section */}
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                  Welcome back, {user.name}!
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Here's what's happening with your account today.
-                </p>
-              </div>
+          {/* Main Content */}
+          <div className="lg:col-span-3 space-y-8">
+            {/* Welcome Section */}
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                Welcome back, {user.name}!
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                Here's what's happening with your account today.
+              </p>
+            </div>
 
               {/* Stats Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -297,12 +294,10 @@ const CustomerDashboard = () => {
                   </div>
                 </CardContent>
               </Card>
-            </div>
           </div>
         </div>
-      </main>
-      <Footer />
-    </>
+      </div>
+    </DashboardLayout>
   );
 };
 

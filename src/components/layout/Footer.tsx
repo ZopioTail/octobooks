@@ -42,16 +42,16 @@ const Footer = () => {
           {/* Company Info */}
           <div className="lg:col-span-2">
             <div className="flex items-center space-x-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-xl">📚</span>
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-lg">📚</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-2xl font-bold">Octobooks</span>
+                <span className="text-xl font-bold">Octobooks</span>
                 <span className="text-sm text-gray-400">Your Digital Library</span>
               </div>
             </div>
-            <p className="text-gray-400 mb-6 max-w-md">
-              Your trusted online bookstore offering the best collection of books from renowned authors and publishers. 
+            <p className="text-gray-400 mb-6 max-w-md text-sm">
+              Your trusted online bookstore offering the best collection of books from renowned authors and publishers.
               Discover, read, and grow with Octobooks.
             </p>
             
@@ -59,28 +59,33 @@ const Footer = () => {
             <div className="space-y-2 text-sm text-gray-400">
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4" />
-                <span>support@octobooks.com</span>
+                <span>cs@octoboks.com</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Phone className="h-4 w-4" />
                 <span>+91 98765 43210</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <MapPin className="h-4 w-4" />
-                <span>Mumbai, Maharashtra, India</span>
+              <div className="flex items-start space-x-2">
+                <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <span className="text-xs">
+                  Primus Building, Door No. SP–7A, 2C,<br />
+                  Guindy Industrial Estate,<br />
+                  SIDCO Industrial Estate,<br />
+                  Guindy, Chennai, Tamil Nadu 600032
+                </span>
               </div>
             </div>
 
             {/* Social Links */}
             <div className="flex space-x-4 mt-6">
               <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                <Facebook className="h-5 w-5" />
+                <Facebook className="h-4 w-4" />
               </a>
               <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                <Twitter className="h-5 w-5" />
+                <Twitter className="h-4 w-4" />
               </a>
               <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                <Instagram className="h-5 w-5" />
+                <Instagram className="h-4 w-4" />
               </a>
             </div>
           </div>
@@ -168,9 +173,15 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center">
-          <p className="text-gray-400 text-sm">
-            © {currentYear} Octobooks. All rights reserved.
-          </p>
+          <div className="flex items-center space-x-4">
+            <p className="text-gray-400 text-sm">
+              © {currentYear} Octobooks. All rights reserved.
+            </p>
+            <span className="text-gray-500">•</span>
+            <p className="text-gray-400 text-sm flex items-center">
+              Made with <span className="text-red-500 mx-1">❤️</span> in India
+            </p>
+          </div>
           <div className="flex space-x-6 mt-4 sm:mt-0">
             <span className="text-gray-400 text-sm">Secure payments with</span>
             <div className="flex space-x-2">

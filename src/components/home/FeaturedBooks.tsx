@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button';
 import BookCard from '@/components/books/BookCard';
 import { getBooks } from '@/lib/books';
 import { Book } from '@/types';
+import { getLiveData } from '@/lib/liveData';
 
 const FeaturedBooks = () => {
   const [featuredBooks, setFeaturedBooks] = useState<Book[]>([]);
@@ -17,50 +18,34 @@ const FeaturedBooks = () => {
   useEffect(() => {
     const fetchFeaturedBooks = async () => {
       try {
-        // Fetch trending books
-        const trendingResult = await getBooks({
-          sortBy: 'popularity',
-          sortOrder: 'desc',
-          limitCount: 6
-        });
+        // Fetch trending books using live data utility (use bestseller flag for trending)
+        const trendingResult = await getLiveData(
+          () => getBooks({
+            filters: { minRating: 4.0 },
+            sortBy: 'rating',
+            sortOrder: 'desc',
+            limitCount: 6
+          }),
+          { books: [], hasMore: false }
+        );
         setFeaturedBooks(trendingResult.books);
 
-        // Fetch editor's picks (high-rated books)
-        const editorsResult = await getBooks({
-          filters: { minRating: 4.5 },
-          sortBy: 'rating',
-          sortOrder: 'desc',
-          limitCount: 4
-        });
+        // Fetch editor's picks (high-rated books) using live data utility
+        const editorsResult = await getLiveData(
+          () => getBooks({
+            filters: { minRating: 4.5 },
+            sortBy: 'rating',
+            sortOrder: 'desc',
+            limitCount: 4
+          }),
+          { books: [], hasMore: false }
+        );
         setEditorsPicks(editorsResult.books);
       } catch (error) {
         console.error('Error fetching featured books:', error);
-        // Fallback to sample data
-        const sampleBooks = [
-          {
-            bookId: '1',
-            title: 'The Psychology of Money',
-            author: 'Morgan Housel',
-            publisher: 'Jaico Publishing',
-            price: 399,
-            finalPrice: 299,
-            rating: 4.8,
-            reviewsCount: 1250,
-            coverImage: '/api/placeholder/250/350',
-            category: 'Business',
-            language: 'English',
-            format: 'Paperback',
-            stock: 50,
-            description: 'Timeless lessons on wealth, greed, and happiness',
-            isbn: '9788194790629',
-            pages: 256,
-            publishedDate: '2020-09-01',
-            createdAt: '2024-01-01T00:00:00Z',
-            updatedAt: '2024-01-01T00:00:00Z'
-          }
-        ];
-        setFeaturedBooks(sampleBooks);
-        setEditorsPicks(sampleBooks);
+        // Fallback to empty arrays if both live data and sample data fail
+        setFeaturedBooks([]);
+        setEditorsPicks([]);
       } finally {
         setLoading(false);
       }
