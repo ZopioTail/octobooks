@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ArrowRight, BookOpen, Users, Award, Download } from 'lucide-react';
+import { ArrowRight, BookOpen, Users, Award, Download, CheckCircle } from 'lucide-react';
 import Button from '@/components/ui/Button';
 
 const CallToAction = () => {
