@@ -58,6 +58,19 @@ export const getDocument = async (collectionName: string, docId: string) => {
   }
 };
 
+export const getDocuments = async (collectionName: string) => {
+  try {
+    const querySnapshot = await getDocs(collection(db, collectionName));
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
+    console.error(`Error getting documents from ${collectionName}:`, error);
+    throw error;
+  }
+};
+
 export const updateDocument = async (collectionName: string, docId: string, data: any) => {
   try {
     const docRef = doc(db, collectionName, docId);
