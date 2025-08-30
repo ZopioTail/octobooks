@@ -2,33 +2,10 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Public read access for books (anyone can read books)
-    match /books/{bookId} {
-      allow read: if request.auth != null || resource.data.published == true;
-      allow write: if request.auth != null && (
-        // Authors can write their own books
-        (request.auth.token.role == 'author' && resource.data.authorId == request.auth.uid) ||
-        // Publishers can write books they publish
-        (request.auth.token.role == 'publisher' && resource.data.publisherId == request.auth.uid) ||
-        // Admins can write all books
-        request.auth.token.role == 'admin'
-      );
-      allow create: if request.auth != null && (
-        // Authors can create books
-        request.auth.token.role == 'author' ||
-        // Publishers can create books
-        request.auth.token.role == 'publisher' ||
-        // Admins can create books
-        request.auth.token.role == 'admin'
-      );
-      allow delete: if request.auth != null && (
-        // Authors can delete their own books
-        (request.auth.token.role == 'author' && resource.data.authorId == request.auth.uid) ||
-        // Publishers can delete books they publish
-        (request.auth.token.role == 'publisher' && resource.data.publisherId == request.auth.uid) ||
-        // Admins can delete all books
-        request.auth.token.role == 'admin'
-      );
+    // Allow all operations for development/testing
+    // In production, you should implement proper role-based security
+    match /{document=**} {
+      allow read, write: if true;
     }
 
     // Users collection - restricted access

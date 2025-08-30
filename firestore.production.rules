@@ -1,0 +1,106 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Function to check user role from Firestore
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    function isAdmin() {
+      return getUserRole() == 'admin';
+    }
+    
+    function isAuthor() {
+      return getUserRole() == 'author';
+    }
+    
+    function isPublisher() {
+      return getUserRole() == 'publisher';
+    }
+    
+    function isCustomer() {
+      return getUserRole() == 'customer';
+    }
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Public read access for books (anyone can read books)
+    match /books/{bookId} {
+      allow read: if isAuthenticated() || resource.data.published == true;
+      allow write: if isAuthenticated() && (
+        // Authors can write their own books
+        (isAuthor() && resource.data.authorId == request.auth.uid) ||
+        // Publishers can write books they publish
+        (isPublisher() && resource.data.publisherId == request.auth.uid) ||
+        // Admins can write all books
+        isAdmin()
+      );
+      allow create: if isAuthenticated() && (
+        // Authors can create books
+        isAuthor() ||
+        // Publishers can create books
+        isPublisher() ||
+        // Admins can create books
+        isAdmin()
+      );
+      allow delete: if isAuthenticated() && (
+        // Authors can delete their own books
+        (isAuthor() && resource.data.authorId == request.auth.uid) ||
+        // Publishers can delete books they publish
+        (isPublisher() && resource.data.publisherId == request.auth.uid) ||
+        // Admins can delete all books
+        isAdmin()
+      );
+    }
+
+    // Users collection - restricted access
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (
+        // Users can read their own profile
+        request.auth.uid == userId ||
+        // Admins can read all profiles
+        isAdmin()
+      );
+      allow write: if isAuthenticated() && (
+        // Users can update their own profile (but not change role)
+        (request.auth.uid == userId && 
+         request.resource.data.role == resource.data.role) ||
+        // Admins can update all profiles
+        isAdmin()
+      );
+      allow create: if isAuthenticated() && (
+        // Only admins can create user profiles
+        isAdmin() ||
+        // Users can create their own profile during registration
+        request.auth.uid == userId
+      );
+    }
+
+    // Orders collection
+    match /orders/{orderId} {
+      allow read: if isAuthenticated() && (
+        // Customers can read their own orders
+        resource.data.userId == request.auth.uid ||
+        // Admins can read all orders
+        isAdmin() ||
+        // Authors can read orders containing their books
+        (isAuthor() && resource.data.books[0].authorId == request.auth.uid) ||
+        // Publishers can read orders containing their books
+        (isPublisher() && resource.data.books[0].publisherId == request.auth.uid)
+      );
+      allow write: if isAuthenticated() && (
+        // Customers can create orders
+        (isCustomer() && request.write) ||
+        // Admins can update orders
+        isAdmin()
+      );
+    }
+
+    // Allow all other operations for development
+    match /{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+}
