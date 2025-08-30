@@ -12,6 +12,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { formatPrice } from '@/lib/utils';
 import { BOOK_CATEGORIES, LANGUAGES } from '@/lib/constants';
+import { searchBooks } from '@/lib/books';
 
 const SearchPage = () => {
   const searchParams = useSearchParams();
@@ -34,44 +35,29 @@ const SearchPage = () => {
     sortBy: searchParams.get('sortBy') || 'relevance'
   });
 
-  // Sample search results - this would come from Firebase search in production
-  const sampleResults = [
-    {
-      id: '1',
-      title: 'The Psychology of Money',
-      author: 'Morgan Housel',
-      publisher: 'Jaico Publishing',
-      price: 399,
-      finalPrice: 299,
-      rating: 4.8,
-      reviewsCount: 1250,
-      coverImage: '/api/placeholder/300/400',
-      category: 'Business',
-      description: 'Timeless lessons on wealth, greed, and happiness...'
-    },
-    {
-      id: '2',
-      title: 'Atomic Habits',
-      author: 'James Clear',
-      publisher: 'Random House',
-      price: 450,
-      finalPrice: 350,
-      rating: 4.9,
-      reviewsCount: 2100,
-      coverImage: '/api/placeholder/300/400',
-      category: 'Self-Help',
-      description: 'An Easy & Proven Way to Build Good Habits & Break Bad Ones...'
-    }
-  ];
 
   useEffect(() => {
-    setLoading(true);
-    // Simulate search API call
-    setTimeout(() => {
-      const filteredResults = applyFilters(sampleResults);
-      setResults(filteredResults);
-      setLoading(false);
-    }, 1000);
+    const performSearch = async () => {
+      if (!query) {
+        setResults([]);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const searchResults = await searchBooks(query, 50);
+        const filteredResults = applyFilters(searchResults);
+        setResults(filteredResults);
+      } catch (error) {
+        console.error('Error searching books:', error);
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    performSearch();
   }, [query, filters]);
 
   // Update URL with current filters
@@ -107,16 +93,6 @@ const SearchPage = () => {
   const applyFilters = (books: any[]) => {
     let filtered = books;
 
-    // Text search
-    if (query) {
-      filtered = filtered.filter(book =>
-        book.title.toLowerCase().includes(query.toLowerCase()) ||
-        book.author.toLowerCase().includes(query.toLowerCase()) ||
-        book.category.toLowerCase().includes(query.toLowerCase()) ||
-        book.publisher.toLowerCase().includes(query.toLowerCase())
-      );
-    }
-
     // Category filter
     if (filters.category) {
       filtered = filtered.filter(book => book.category === filters.category);
@@ -135,6 +111,16 @@ const SearchPage = () => {
       filtered = filtered.filter(book => book.rating >= parseFloat(filters.rating));
     }
 
+    // Language filter
+    if (filters.language) {
+      filtered = filtered.filter(book => book.language === filters.language);
+    }
+
+    // Format filter
+    if (filters.format) {
+      filtered = filtered.filter(book => book.format === filters.format);
+    }
+
     // Sort results
     switch (filters.sortBy) {
       case 'price-low':
@@ -147,12 +133,13 @@ const SearchPage = () => {
         filtered.sort((a, b) => b.rating - a.rating);
         break;
       case 'newest':
-        filtered.sort((a, b) => new Date(b.publishedDate || '').getTime() - new Date(a.publishedDate || '').getTime());
+        filtered.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
         break;
       case 'popularity':
         filtered.sort((a, b) => b.reviewsCount - a.reviewsCount);
         break;
       default: // relevance
+        // Sort by relevance (already sorted by search relevance)
         break;
     }
 
@@ -388,7 +375,7 @@ const SearchPage = () => {
           ) : results.length > 0 ? (
             <div className="space-y-6">
               {results.map((book) => (
-                <Card key={book.id} hover>
+                <Card key={book.bookId} hover>
                   <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-6">
                       {/* Book Cover */}
@@ -408,7 +395,7 @@ const SearchPage = () => {
                             {book.title}
                           </h3>
                           <p className="text-gray-600 dark:text-gray-400">
-                            by <span className="font-medium">{book.author}</span> • {book.publisher}
+                            by <span className="font-medium">{book.authorName}</span> • {book.publisherName}
                           </p>
                         </div>
 

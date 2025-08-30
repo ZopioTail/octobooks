@@ -1,91 +1,212 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { hasPermission, hasPermissions } from '@/lib/permissions';
+import { User } from '@/types';
 import Loading from '@/components/ui/Loading';
-import { Card, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: 'customer' | 'author' | 'publisher' | 'admin';
-  requireAuth?: boolean;
-  fallbackPath?: string;
+  requiredPermission?: string;
+  requiredPermissions?: string[];
+  requiredRole?: User['role'];
+  requiredRoles?: User['role'][];
+  fallback?: React.ReactNode;
+  showUnauthorized?: boolean;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
+  requiredPermission,
+  requiredPermissions,
   requiredRole,
-  requireAuth = true,
-  fallbackPath = '/auth/login'
+  requiredRoles,
+  fallback,
+  showUnauthorized = true
 }) => {
-  const { currentUser, userProfile, loading, isAuthenticated } = useAuth();
-  const router = useRouter();
+  const { userProfile, loading, isAuthenticated } = useAuth();
 
-  // Show loading while checking authentication
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loading size="lg" />
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Checking authentication...</p>
-        </div>
+        <Loading size="lg" />
       </div>
     );
   }
 
-  // Redirect to login if authentication is required but user is not authenticated
-  if (requireAuth && !isAuthenticated) {
-    router.push(fallbackPath);
-    return (
+  if (!isAuthenticated || !userProfile) {
+    return fallback || (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Loading size="lg" />
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Redirecting to login...</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Authentication Required
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            Please sign in to access this page.
+          </p>
+          <Link href="/auth/login">
+            <Button variant="primary">
+              Sign In
+            </Button>
+          </Link>
         </div>
       </div>
     );
   }
 
   // Check role-based access
-  if (requiredRole && userProfile?.role !== requiredRole) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-md w-full px-4">
-          <Card>
-            <CardContent className="p-8 text-center">
-              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">🚫</span>
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                Access Denied
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                You don't have permission to access this page. This page requires {requiredRole} role.
-              </p>
-              <div className="space-y-3">
-                <Link href="/dashboard">
-                  <Button variant="primary" className="w-full">
-                    Go to Dashboard
-                  </Button>
-                </Link>
-                <Link href="/">
-                  <Button variant="outline" className="w-full">
-                    Back to Home
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
+  if (requiredRole && userProfile.role !== requiredRole) {
+    return showUnauthorized ? (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Access Denied
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            You don't have the required role to access this page.
+          </p>
+          <Link href="/dashboard">
+            <Button variant="primary">
+              Go to Dashboard
+            </Button>
+          </Link>
         </div>
       </div>
-    );
+    ) : null;
   }
 
-  // Render children if all checks pass
+  if (requiredRoles && !requiredRoles.includes(userProfile.role)) {
+    return showUnauthorized ? (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Access Denied
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            You don't have the required role to access this page.
+          </p>
+          <Link href="/dashboard">
+            <Button variant="primary">
+              Go to Dashboard
+            </Button>
+          </Link>
+        </div>
+      </div>
+    ) : null;
+  }
+
+  // Check permission-based access
+  if (requiredPermission && !hasPermission(userProfile, requiredPermission)) {
+    return showUnauthorized ? (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Access Denied
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            You don't have permission to access this page.
+          </p>
+          <Link href="/dashboard">
+            <Button variant="primary">
+              Go to Dashboard
+            </Button>
+          </Link>
+        </div>
+      </div>
+    ) : null;
+  }
+
+  if (requiredPermissions && !hasPermissions(userProfile, requiredPermissions)) {
+    return showUnauthorized ? (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Access Denied
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            You don't have the required permissions to access this page.
+          </p>
+          <Link href="/dashboard">
+            <Button variant="primary">
+              Go to Dashboard
+            </Button>
+          </Link>
+        </div>
+      </div>
+    ) : null;
+  }
+
   return <>{children}</>;
 };
 
 export default ProtectedRoute;
+
+// Higher-order component for role-based protection
+export const withRoleProtection = (
+  Component: React.ComponentType<any>,
+  requiredRole: User['role'],
+  fallback?: React.ReactNode
+) => {
+  return function RoleProtectedComponent(props: any) {
+    return (
+      <ProtectedRoute requiredRole={requiredRole} fallback={fallback}>
+        <Component {...props} />
+      </ProtectedRoute>
+    );
+  };
+};
+
+// Higher-order component for permission-based protection
+export const withPermissionProtection = (
+  Component: React.ComponentType<any>,
+  requiredPermission: string,
+  fallback?: React.ReactNode
+) => {
+  return function PermissionProtectedComponent(props: any) {
+    return (
+      <ProtectedRoute requiredPermission={requiredPermission} fallback={fallback}>
+        <Component {...props} />
+      </ProtectedRoute>
+    );
+  };
+};
+
+// Quick access components for common roles
+export const AdminOnly: React.FC<{ children: React.ReactNode; fallback?: React.ReactNode }> = ({
+  children,
+  fallback
+}) => (
+  <ProtectedRoute requiredRole="admin" fallback={fallback}>
+    {children}
+  </ProtectedRoute>
+);
+
+export const AuthorOnly: React.FC<{ children: React.ReactNode; fallback?: React.ReactNode }> = ({
+  children,
+  fallback
+}) => (
+  <ProtectedRoute requiredRole="author" fallback={fallback}>
+    {children}
+  </ProtectedRoute>
+);
+
+export const PublisherOnly: React.FC<{ children: React.ReactNode; fallback?: React.ReactNode }> = ({
+  children,
+  fallback
+}) => (
+  <ProtectedRoute requiredRole="publisher" fallback={fallback}>
+    {children}
+  </ProtectedRoute>
+);
+
+export const CustomerOnly: React.FC<{ children: React.ReactNode; fallback?: React.ReactNode }> = ({
+  children,
+  fallback
+}) => (
+  <ProtectedRoute requiredRole="customer" fallback={fallback}>
+    {children}
+  </ProtectedRoute>
+);

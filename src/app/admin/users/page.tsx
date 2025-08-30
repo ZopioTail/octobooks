@@ -8,7 +8,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { getDocument, updateDocument, deleteDocument } from '@/lib/firestore';
+import { getDocument, updateDocument, deleteDocument, getDocuments } from '@/lib/firestore';
 import { USER_ROLES } from '@/lib/constants';
 import { User as UserType } from '@/types';
 
@@ -30,8 +30,23 @@ const UsersPage = () => {
 
   const fetchUsers = async () => {
     try {
-      // In a real implementation, this would fetch from Firestore
-      // For now, we'll use a mock implementation
+      // Fetch users from Firestore
+      const usersCollection = await getDocuments('users');
+      const usersData = usersCollection.map((user: any) => ({
+        userId: user.id,
+        name: user.name || 'Unknown User',
+        email: user.email || '',
+        role: user.role || 'customer',
+        createdAt: user.createdAt || new Date().toISOString(),
+        lastLogin: user.lastLogin,
+        profileImage: user.profileImage,
+        isActive: user.isActive !== false
+      })) as AdminUser[];
+      
+      setUsers(usersData);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      // Fallback to mock data if Firestore is not available
       const mockUsers: AdminUser[] = [
         {
           userId: '1',
@@ -40,7 +55,8 @@ const UsersPage = () => {
           role: 'admin' as const,
           createdAt: '2024-01-01',
           lastLogin: '2024-08-29',
-          profileImage: undefined
+          profileImage: undefined,
+          isActive: true
         },
         {
           userId: '2',
@@ -49,7 +65,8 @@ const UsersPage = () => {
           role: 'author' as const,
           createdAt: '2024-02-15',
           lastLogin: '2024-08-28',
-          profileImage: undefined
+          profileImage: undefined,
+          isActive: true
         },
         {
           userId: '3',
@@ -58,7 +75,8 @@ const UsersPage = () => {
           role: 'publisher' as const,
           createdAt: '2024-03-20',
           lastLogin: '2024-08-27',
-          profileImage: undefined
+          profileImage: undefined,
+          isActive: true
         },
         {
           userId: '4',
@@ -67,12 +85,11 @@ const UsersPage = () => {
           role: 'customer' as const,
           createdAt: '2024-04-10',
           lastLogin: '2024-08-26',
-          profileImage: undefined
+          profileImage: undefined,
+          isActive: true
         }
       ];
       setUsers(mockUsers);
-    } catch (error) {
-      console.error('Error fetching users:', error);
     } finally {
       setLoading(false);
     }
@@ -92,7 +109,7 @@ const UsersPage = () => {
   const handleDeleteUser = async (userId: string) => {
     if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
       try {
-        // In a real implementation, this would delete from Firestore
+        await deleteDocument('users', userId);
         setUsers(prev => prev.filter(user => user.userId !== userId));
         alert('User deleted successfully');
       } catch (error) {
@@ -104,7 +121,10 @@ const UsersPage = () => {
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
-      // In a real implementation, this would update Firestore
+      await updateDocument('users', userId, {
+        role: newRole,
+        updatedAt: new Date().toISOString()
+      });
       setUsers(prev => prev.map(user =>
         user.userId === userId ? { ...user, role: newRole as 'admin' | 'customer' | 'author' | 'publisher' } : user
       ));
@@ -142,7 +162,7 @@ const UsersPage = () => {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">User Management</h1>
             <p className="text-gray-600 dark:text-gray-400">Manage all users and their roles</p>
           </div>
-          <Button variant="primary">
+          <Button variant="primary" onClick={() => router.push('/admin/users/new')}>
             <Plus className="h-4 w-4 mr-2" />
             Add New User
           </Button>

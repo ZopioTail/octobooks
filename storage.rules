@@ -1,0 +1,130 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Book covers and images
+    match /book-covers/{bookId}/{imageName} {
+      allow read: if true; // Anyone can read book covers
+      allow write: if request.auth != null && (
+        // Authors can upload covers for their own books
+        (request.auth.token.role == 'author' && 
+         resource.metadata.authorId == request.auth.uid) ||
+        // Publishers can upload covers for their books
+        (request.auth.token.role == 'publisher' && 
+         resource.metadata.publisherId == request.auth.uid) ||
+        // Admins can upload all covers
+        request.auth.token.role == 'admin'
+      );
+      allow delete: if request.auth != null && (
+        // Authors can delete their own book covers
+        (request.auth.token.role == 'author' && 
+         resource.metadata.authorId == request.auth.uid) ||
+        // Publishers can delete their book covers
+        (request.auth.token.role == 'publisher' && 
+         resource.metadata.publisherId == request.auth.uid) ||
+        // Admins can delete all covers
+        request.auth.token.role == 'admin'
+      );
+    }
+
+    // Author profile images
+    match /author-profiles/{authorId}/{imageName} {
+      allow read: if true; // Anyone can read author profiles
+      allow write: if request.auth != null && (
+        // Authors can upload their own profile images
+        (request.auth.token.role == 'author' && authorId == request.auth.uid) ||
+        // Admins can upload all profile images
+        request.auth.token.role == 'admin'
+      );
+      allow delete: if request.auth != null && (
+        // Authors can delete their own profile images
+        (request.auth.token.role == 'author' && authorId == request.auth.uid) ||
+        // Admins can delete all profile images
+        request.auth.token.role == 'admin'
+      );
+    }
+
+    // Publisher profile images
+    match /publisher-profiles/{publisherId}/{imageName} {
+      allow read: if true; // Anyone can read publisher profiles
+      allow write: if request.auth != null && (
+        // Publishers can upload their own profile images
+        (request.auth.token.role == 'publisher' && publisherId == request.auth.uid) ||
+        // Admins can upload all profile images
+        request.auth.token.role == 'admin'
+      );
+      allow delete: if request.auth != null && (
+        // Publishers can delete their own profile images
+        (request.auth.token.role == 'publisher' && publisherId == request.auth.uid) ||
+        // Admins can delete all profile images
+        request.auth.token.role == 'admin'
+      );
+    }
+
+    // User profile images
+    match /user-profiles/{userId}/{imageName} {
+      allow read: if true; // Anyone can read user profiles
+      allow write: if request.auth != null && (
+        // Users can upload their own profile images
+        userId == request.auth.uid ||
+        // Admins can upload all profile images
+        request.auth.token.role == 'admin'
+      );
+      allow delete: if request.auth != null && (
+        // Users can delete their own profile images
+        userId == request.auth.uid ||
+        // Admins can delete all profile images
+        request.auth.token.role == 'admin'
+      );
+    }
+
+    // Book sample chapters
+    match /book-samples/{bookId}/{fileName} {
+      allow read: if true; // Anyone can read book samples
+      allow write: if request.auth != null && (
+        // Authors can upload samples for their own books
+        (request.auth.token.role == 'author' && 
+         resource.metadata.authorId == request.auth.uid) ||
+        // Publishers can upload samples for their books
+        (request.auth.token.role == 'publisher' && 
+         resource.metadata.publisherId == request.auth.uid) ||
+        // Admins can upload all samples
+        request.auth.token.role == 'admin'
+      );
+      allow delete: if request.auth != null && (
+        // Authors can delete their own book samples
+        (request.auth.token.role == 'author' && 
+         resource.metadata.authorId == request.auth.uid) ||
+        // Publishers can delete their book samples
+        (request.auth.token.role == 'publisher' && 
+         resource.metadata.publisherId == request.auth.uid) ||
+        // Admins can delete all samples
+        request.auth.token.role == 'admin'
+      );
+    }
+
+    // Reports and exports
+    match /reports/{reportId} {
+      allow read: if request.auth != null && request.auth.token.role == 'admin';
+      allow write: if request.auth != null && request.auth.token.role == 'admin';
+      allow delete: if request.auth != null && request.auth.token.role == 'admin';
+    }
+
+    // Temporary uploads
+    match /temp/{userId}/{fileName} {
+      allow read: if request.auth != null && userId == request.auth.uid;
+      allow write: if request.auth != null && userId == request.auth.uid;
+      allow delete: if request.auth != null && userId == request.auth.uid;
+      
+      // Auto-delete after 24 hours
+      match /{document=**} {
+        allow read, write: if request.time < resource.time + duration.value(24, 'hours');
+      }
+    }
+
+    // General security rules
+    match /{allPaths=**} {
+      // Default deny rule
+      allow read, write: if false;
+    }
+  }
+}

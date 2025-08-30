@@ -4,11 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { BookOpen, Users, DollarSign, TrendingUp, Plus, FileText, Settings, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
+import { PublisherOnly } from '@/components/auth/ProtectedRoute';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatPrice } from '@/lib/utils';
+import { getPublisherEarnings, getPublisherSalesReport } from '@/lib/royalty';
 
 const PublisherDashboard = () => {
   const { userProfile } = useAuth();
@@ -20,6 +20,7 @@ const PublisherDashboard = () => {
     monthlyRevenue: 0,
     pendingPayouts: 0
   });
+  const [loading, setLoading] = useState(true);
 
   const [topBooks, setTopBooks] = useState([
     {
@@ -54,10 +55,35 @@ const PublisherDashboard = () => {
   ]);
 
   useEffect(() => {
-    // Fetch publisher stats from Firebase
     const fetchPublisherStats = async () => {
       try {
-        // This would fetch real data from Firebase
+        if (!userProfile) return;
+        
+        // Fetch real data from Firebase
+        const publisherEarnings = await getPublisherEarnings(userProfile.userId);
+        const salesData = await getPublisherSalesReport(userProfile.userId);
+        
+        const totalSales = salesData.reduce((sum, sale) => sum + sale.quantity, 0);
+        const totalRevenue = salesData.reduce((sum, sale) => sum + sale.saleAmount, 0);
+        
+        // Calculate monthly revenue (last 30 days)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const monthlyRevenue = salesData
+          .filter(sale => new Date(sale.date) >= thirtyDaysAgo)
+          .reduce((sum, sale) => sum + sale.saleAmount, 0);
+        
+        setStats({
+          totalBooks: 45, // This would need to be fetched from books collection
+          totalAuthors: 25, // This would need to be fetched from authors collection
+          totalSales,
+          totalRevenue,
+          monthlyRevenue,
+          pendingPayouts: publisherEarnings
+        });
+      } catch (error) {
+        console.error('Error fetching publisher stats:', error);
+        // Fallback to sample data
         setStats({
           totalBooks: 45,
           totalAuthors: 25,
@@ -66,13 +92,15 @@ const PublisherDashboard = () => {
           monthlyRevenue: 85000,
           pendingPayouts: 25000
         });
-      } catch (error) {
-        console.error('Error fetching publisher stats:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
     if (userProfile?.role === 'publisher') {
       fetchPublisherStats();
+    } else {
+      setLoading(false);
     }
   }, [userProfile]);
 
@@ -118,10 +146,24 @@ const PublisherDashboard = () => {
     { name: 'Publisher Settings', icon: Settings, href: '/dashboard/publisher/settings', color: 'bg-orange-600' }
   ];
 
+  if (loading) {
+    return (
+      <PublisherOnly>
+        <DashboardLayout title="Publisher Dashboard">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">Loading publisher dashboard...</p>
+            </div>
+          </div>
+        </DashboardLayout>
+      </PublisherOnly>
+    );
+  }
+
   return (
-    <ProtectedRoute requiredRole="publisher">
-      <Header />
-      <main className="flex-1 bg-gray-50 dark:bg-gray-900">
+    <PublisherOnly>
+      <DashboardLayout title="Publisher Dashboard">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="mb-8">
@@ -168,7 +210,7 @@ const PublisherDashboard = () => {
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                       Top Performing Books
                     </h2>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => window.location.href = '/dashboard/publisher/books'}>
                       View All Books
                     </Button>
                   </div>
@@ -224,6 +266,7 @@ const PublisherDashboard = () => {
                       key={action.name}
                       variant="outline"
                       className="w-full justify-start"
+                      onClick={() => window.location.href = action.href}
                     >
                       <div className={`p-2 rounded-lg ${action.color} mr-3`}>
                         <action.icon className="h-4 w-4 text-white" />
@@ -284,9 +327,8 @@ const PublisherDashboard = () => {
             </div>
           </div>
         </div>
-      </main>
-      <Footer />
-    </ProtectedRoute>
+      </DashboardLayout>
+    </PublisherOnly>
   );
 };
 

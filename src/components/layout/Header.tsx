@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Search, ShoppingCart, User, Menu, X, Heart, LogOut, Settings } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, Heart, LogOut, Settings, ChevronDown } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
@@ -16,13 +16,52 @@ const Header = () => {
   const { isAuthenticated, userProfile } = useAuth();
   const { itemCount } = useCart();
 
+  const [showCategoriesMenu, setShowCategoriesMenu] = useState(false);
+
+  const bookCategories = {
+    'Fiction': [
+      { name: 'Literary Fiction', href: '/category/fiction/literary' },
+      { name: 'Historical Fiction', href: '/category/fiction/historical' },
+      { name: 'Romance', href: '/category/fiction/romance' },
+      { name: 'Thriller & Mystery', href: '/category/fiction/thriller-mystery' },
+      { name: 'Fantasy & Sci-Fi', href: '/category/fiction/fantasy-sci-fi' }
+    ],
+    'Non-Fiction': [
+      { name: 'Biography & Memoir', href: '/category/non-fiction/biography' },
+      { name: 'Self-Help', href: '/category/non-fiction/self-help' },
+      { name: 'Business & Economics', href: '/category/non-fiction/business' },
+      { name: 'Politics', href: '/category/non-fiction/politics' },
+      { name: 'Travel', href: '/category/non-fiction/travel' }
+    ],
+    'Academic & Education': [
+      { name: 'School Textbooks', href: '/category/academic/school' },
+      { name: 'College/University', href: '/category/academic/college' },
+      { name: 'Competitive Exams', href: '/category/academic/exams' },
+      { name: 'Research', href: '/category/academic/research' }
+    ],
+    'Children & Young Adult': [
+      { name: 'Picture Books', href: '/category/children/picture-books' },
+      { name: 'Early Learning', href: '/category/children/early-learning' },
+      { name: 'Young Adult Fiction', href: '/category/children/young-adult' }
+    ],
+    'Professional & Technical': [
+      { name: 'Law', href: '/category/professional/law' },
+      { name: 'Medicine', href: '/category/professional/medicine' },
+      { name: 'Engineering', href: '/category/professional/engineering' },
+      { name: 'Management', href: '/category/professional/management' }
+    ],
+    'Special Categories': [
+      { name: 'New Arrivals', href: '/books?sort=newest' },
+      { name: 'Bestsellers', href: '/books?sort=bestseller' },
+      { name: 'Offers & Discounts', href: '/books?discounts=true' }
+    ]
+  };
+
   const navigation = [
     { name: 'Home', href: '/' },
-    { name: 'Fiction', href: '/category/fiction' },
-    { name: 'Non-Fiction', href: '/category/non-fiction' },
-    { name: 'Educational', href: '/category/educational' },
-    { name: 'Children', href: '/category/children' },
-    { name: 'Professional', href: '/category/professional' },
+    { name: 'Books', href: '/books' },
+    { name: 'Authors', href: '/authors' },
+    { name: 'Publishers', href: '/publishers' }
   ];
 
   return (
@@ -47,7 +86,7 @@ const Header = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-8">
+          <nav className="hidden lg:flex items-center space-x-6">
             {navigation.map((item) => (
               <Link
                 key={item.name}
@@ -58,20 +97,57 @@ const Header = () => {
                 <span className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-blue-600 transition-all group-hover:w-4/5"></span>
               </Link>
             ))}
+            
+            {/* Book Categories Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowCategoriesMenu(!showCategoriesMenu)}
+                className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 transition-colors font-medium px-3 py-2 group"
+              >
+                <span>Book Categories</span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${showCategoriesMenu ? 'rotate-180' : ''}`} />
+                <span className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-blue-600 transition-all group-hover:w-4/5"></span>
+              </button>
+
+              {/* Categories Dropdown Menu */}
+              {showCategoriesMenu && (
+                <div className="absolute top-full left-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-4 z-50 grid grid-cols-2 gap-4">
+                  {Object.entries(bookCategories).map(([category, items]) => (
+                    <div key={category}>
+                      <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-2 pb-1 border-b border-gray-200 dark:border-gray-700">
+                        {category}
+                      </h3>
+                      <div className="space-y-1">
+                        {items.map((item) => (
+                          <Link
+                            key={item.name}
+                            href={item.href}
+                            className="block text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-1"
+                            onClick={() => setShowCategoriesMenu(false)}
+                          >
+                            {item.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* Search Bar */}
-          <div className="hidden lg:flex flex-1 max-w-md mx-6">
+          <div className="hidden lg:flex flex-1 max-w-lg mx-6">
             <div className="relative w-full">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-gray-400" />
+                <Search className="h-5 w-5 text-gray-400" />
               </div>
               <input
                 type="text"
-                placeholder="Search books, authors..."
+                placeholder="Search books, authors, publishers..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white text-sm"
+                className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white text-base"
               />
             </div>
           </div>
@@ -188,12 +264,12 @@ const Header = () => {
               <div className="px-2">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-4 w-4 text-gray-400" />
+                    <Search className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
                     type="text"
-                    placeholder="Search books..."
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white text-sm"
+                    placeholder="Search books, authors, publishers..."
+                    className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white text-base"
                   />
                 </div>
               </div>
@@ -210,6 +286,34 @@ const Header = () => {
                     {item.name}
                   </Link>
                 ))}
+                
+                {/* Mobile Book Categories */}
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                  <h3 className="px-3 py-2 font-semibold text-gray-900 dark:text-white text-sm">
+                    Book Categories
+                  </h3>
+                  <div className="space-y-1">
+                    {Object.entries(bookCategories).map(([category, items]) => (
+                      <div key={category} className="pl-4">
+                        <h4 className="font-medium text-gray-800 dark:text-gray-300 text-sm mb-2">
+                          {category}
+                        </h4>
+                        <div className="space-y-1">
+                          {items.map((item) => (
+                            <Link
+                              key={item.name}
+                              href={item.href}
+                              className="block px-3 py-1.5 text-gray-600 dark:text-gray-400 hover:text-blue-600 hover:bg-gray-50 rounded-lg dark:hover:text-blue-400 dark:hover:bg-gray-800 transition-colors text-sm"
+                              onClick={() => setIsMenuOpen(false)}
+                            >
+                              {item.name}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </nav>
 
               {/* Mobile auth section */}

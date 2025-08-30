@@ -1,4 +1,7 @@
 import { createOrder } from './firestore';
+import { recordSaleAndAllocateRoyalties } from './royalty';
+import { getBookById } from './books';
+import { Order, OrderItem } from '@/types';
 
 declare global {
   interface Window {
@@ -13,6 +16,8 @@ export interface OrderData {
     title: string;
     quantity: number;
     finalPrice: number;
+    coverImage: string;
+    price: number;
   }>;
   shippingAddress: {
     name: string;
@@ -24,7 +29,7 @@ export interface OrderData {
     pincode: string;
     country: string;
   };
-  paymentMethod: string;
+  paymentMethod: 'razorpay' | 'cod';
   subtotal: number;
   shipping: number;
   tax: number;
@@ -80,23 +85,50 @@ export const processRazorpayPayment = async (orderData: OrderData): Promise<void
           console.log('Payment successful:', response);
           
           // Create order in Firestore
-          const order = {
+          const orderDataForFirestore = {
             userId: orderData.userId,
-            books: orderData.books,
+            books: orderData.books.map(book => ({
+              bookId: book.bookId,
+              title: book.title,
+              quantity: book.quantity,
+              finalPrice: book.finalPrice,
+              coverImage: book.coverImage,
+              price: book.price
+            } as OrderItem)),
             shippingAddress: orderData.shippingAddress,
-            paymentMethod: 'razorpay',
+            paymentMethod: 'razorpay' as const,
             paymentId: response.razorpay_payment_id,
-            orderId: response.razorpay_order_id,
-            signature: response.razorpay_signature,
+            razorpayOrderId: response.razorpay_order_id,
+            razorpaySignature: response.razorpay_signature,
             subtotal: orderData.subtotal,
             shipping: orderData.shipping,
             tax: orderData.tax,
             total: orderData.total,
-            status: 'confirmed',
-            paymentStatus: 'paid'
+            orderStatus: 'confirmed' as const,
+            paymentStatus: 'paid' as const
           };
 
-          await createOrder(order);
+          const orderId = await createOrder(orderDataForFirestore);
+          
+          // Create complete order object for royalty allocation
+          const completeOrder: Order = {
+            orderId,
+            ...orderDataForFirestore,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+
+          // Allocate royalties for each book in the order
+          for (const item of orderData.books) {
+            const book = await getBookById(item.bookId);
+            if (book) {
+              await recordSaleAndAllocateRoyalties(
+                completeOrder,
+                book,
+                item.quantity
+              );
+            }
+          }
           
           // Redirect to success page
           window.location.href = '/order-success';
@@ -123,20 +155,47 @@ export const processRazorpayPayment = async (orderData: OrderData): Promise<void
 // Process COD order
 export const processCODOrder = async (orderData: OrderData): Promise<void> => {
   try {
-    const order = {
+    const orderDataForFirestore = {
       userId: orderData.userId,
-      books: orderData.books,
+      books: orderData.books.map(book => ({
+        bookId: book.bookId,
+        title: book.title,
+        quantity: book.quantity,
+        finalPrice: book.finalPrice,
+        coverImage: book.coverImage,
+        price: book.price
+      } as OrderItem)),
       shippingAddress: orderData.shippingAddress,
-      paymentMethod: 'cod',
+      paymentMethod: 'cod' as const,
       subtotal: orderData.subtotal,
       shipping: orderData.shipping,
       tax: orderData.tax,
       total: orderData.total,
-      status: 'confirmed',
-      paymentStatus: 'pending'
+      orderStatus: 'confirmed' as const,
+      paymentStatus: 'pending' as const
     };
 
-    await createOrder(order);
+    const orderId = await createOrder(orderDataForFirestore);
+    
+    // Create complete order object for royalty allocation
+    const completeOrder: Order = {
+      orderId,
+      ...orderDataForFirestore,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    // Allocate royalties for each book in the order
+    for (const item of orderData.books) {
+      const book = await getBookById(item.bookId);
+      if (book) {
+        await recordSaleAndAllocateRoyalties(
+          completeOrder,
+          book,
+          item.quantity
+        );
+      }
+    }
     
     // Redirect to success page
     window.location.href = '/order-success';

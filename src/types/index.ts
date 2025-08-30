@@ -14,6 +14,9 @@ export interface User {
 }
 
 export interface Address {
+  name: string;
+  email: string;
+  phone: string;
   street: string;
   city: string;
   state: string;
@@ -55,11 +58,18 @@ export interface Order {
   orderId: string;
   userId: string;
   books: OrderItem[];
-  totalAmount: number;
+  paymentMethod: 'razorpay' | 'cod';
+  subtotal: number;
+  shipping: number;
+  tax: number;
+  total: number;
   paymentStatus: 'paid' | 'pending' | 'failed' | 'refunded';
   razorpayPaymentId?: string;
+  razorpayOrderId?: string;
+  razorpaySignature?: string;
   orderStatus: 'processing' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled' | 'returned';
   shiprocketTrackingId?: string;
+  trackingNumber?: string;
   shippingAddress: Address;
   billingAddress?: Address;
   createdAt: string;
@@ -79,8 +89,11 @@ export interface OrderItem {
 export interface Sale {
   saleId: string;
   bookId: string;
+  bookTitle: string;
   authorId: string;
+  authorName: string;
   publisherId: string;
+  publisherName: string;
   orderId: string;
   quantity: number;
   saleAmount: number;
